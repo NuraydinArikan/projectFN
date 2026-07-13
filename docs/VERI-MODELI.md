@@ -29,8 +29,8 @@ belge (document)
 └── haber_belge (n-n)
 
 kisi / kurum (entity)
-└── haber_varlik (n-n, rol: taraf | tanık | yetkili | konu)
-    → taraf görüşü alındı mı alanı doğrulama karnesini besler
+└── haber_varlik (n-n, rol: taraf | tanık | yetkili | konu, gorus_alindi: boolean)
+    → gorus_alindi alanı doğrulama karnesini besler
 
 tekzip_duzeltme
 ├── haber_id, tur: tekzip | düzeltme | güncelleme

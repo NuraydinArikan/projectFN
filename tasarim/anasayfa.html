@@ -481,7 +481,7 @@
       btn.addEventListener('click', function () {
         document.querySelectorAll('.modes button').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
         btn.setAttribute('aria-pressed', 'true');
-        body.innerHTML = texts[btn.dataset.mode];
+        body.innerHTML = texts[btn.dataset.mode] || texts.ozet;
       });
     });
   })();
