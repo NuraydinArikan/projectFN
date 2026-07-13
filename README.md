@@ -17,6 +17,7 @@
 - [Veri Modeli](docs/VERI-MODELI.md) — "haber = bilgi nesnesi" yaklaşımının ilk şeması
 - [Ana Sayfa Prototipi](tasarim/anasayfa.html) — doğrulama karnesi, kronoloji, okuma modları ve kaynak karşılaştırma modülleri
 - [Haber Detay Prototipi](tasarim/haberdetay.html) — açılmış doğrulama karnesi, belge görüntüleyici, tam kronoloji ve resmî kaynak filtresi
+- [Editör Paneli Prototipi](tasarim/editorpaneli.html) — canlı doğrulama karnesi, yayın eşiği, hukuki risk ön taraması ve AI başlık önerileri
 
 ## Çalışma ilkesi
 
