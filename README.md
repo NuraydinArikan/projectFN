@@ -16,6 +16,7 @@
 - [Vizyon Dokümanı](docs/VIZYON.md) — projenin omurgası, farklılaştırıcı özellikler ve yol haritası
 - [Veri Modeli](docs/VERI-MODELI.md) — "haber = bilgi nesnesi" yaklaşımının ilk şeması
 - [Ana Sayfa Prototipi](tasarim/anasayfa.html) — doğrulama karnesi, kronoloji, okuma modları ve kaynak karşılaştırma modülleri
+- [Haber Detay Prototipi](tasarim/haberdetay.html) — açılmış doğrulama karnesi, belge görüntüleyici, tam kronoloji ve resmî kaynak filtresi
 
 ## Çalışma ilkesi
 
