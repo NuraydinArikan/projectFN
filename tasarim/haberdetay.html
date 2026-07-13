@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project FN — Haber Detay Tasarım Prototipi</title>
+</head>
+<body>
+<style>
+  :root {
+    --paper: #FBFBF8;
+    --card: #FFFFFF;
+    --ink: #14181D;
+    --muted: #5B6470;
+    --line: rgba(20, 24, 29, 0.14);
+    --line-strong: rgba(20, 24, 29, 0.55);
+    --red: #B5121B;
+    --green: #157A5B;
+    --green-soft: rgba(21, 122, 91, 0.10);
+    --amber: #9A6A00;
+    --amber-soft: rgba(154, 106, 0, 0.10);
+    --overlay: rgba(20, 24, 29, 0.55);
+    --display: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --body: Georgia, "Times New Roman", serif;
+    --mono: "SF Mono", "Cascadia Code", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #15181C; --card: #1C2026; --ink: #E8E6DF; --muted: #9AA1AB;
+      --line: rgba(232,230,223,0.16); --line-strong: rgba(232,230,223,0.55);
+      --red: #E24C55; --green: #3FA98A; --green-soft: rgba(63,169,138,0.14);
+      --amber: #D9A83C; --amber-soft: rgba(217,168,60,0.14);
+      --overlay: rgba(0,0,0,0.65);
+    }
+  }
+  :root[data-theme="light"] {
+    --paper: #FBFBF8; --card: #FFFFFF; --ink: #14181D; --muted: #5B6470;
+    --line: rgba(20,24,29,0.14); --line-strong: rgba(20,24,29,0.55);
+    --red: #B5121B; --green: #157A5B; --green-soft: rgba(21,122,91,0.10);
+    --amber: #9A6A00; --amber-soft: rgba(154,106,0,0.10);
+    --overlay: rgba(20,24,29,0.55);
+  }
+  :root[data-theme="dark"] {
+    --paper: #15181C; --card: #1C2026; --ink: #E8E6DF; --muted: #9AA1AB;
+    --line: rgba(232,230,223,0.16); --line-strong: rgba(232,230,223,0.55);
+    --red: #E24C55; --green: #3FA98A; --green-soft: rgba(63,169,138,0.14);
+    --amber: #D9A83C; --amber-soft: rgba(217,168,60,0.14);
+    --overlay: rgba(0,0,0,0.65);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--body); line-height: 1.6; }
+  .wrap { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
+  .label { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+
+  /* Üst şerit + masthead (kompakt) */
+  .topbar { border-bottom: 1px solid var(--line); font-family: var(--display); font-size: 12px; }
+  .topbar .wrap { display: flex; align-items: center; gap: 16px; padding: 8px 20px; }
+  .proto-badge { background: var(--amber-soft); color: var(--amber); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 10px; padding: 3px 8px; border-radius: 3px; white-space: nowrap; }
+  .topbar .date { color: var(--muted); margin-left: auto; }
+
+  header.mast { border-bottom: 2px solid var(--line-strong); }
+  header.mast .wrap { display: flex; align-items: center; gap: 24px; padding-top: 14px; padding-bottom: 0; flex-wrap: wrap; }
+  .logo { font-family: var(--display); font-size: 26px; font-weight: 900; letter-spacing: -0.03em; padding-bottom: 12px; }
+  .logo em { font-style: normal; color: var(--red); }
+  nav.mainnav { display: flex; gap: 2px; overflow-x: auto; }
+  nav.mainnav a { font-family: var(--display); font-size: 13px; font-weight: 700; color: var(--ink); text-decoration: none; padding: 10px 12px 14px; white-space: nowrap; }
+  nav.mainnav a:hover, nav.mainnav a:focus-visible { color: var(--red); outline: none; }
+  nav.mainnav a.active { box-shadow: inset 0 -3px 0 var(--red); }
+
+  /* Makale başlığı */
+  .art-head { padding: 32px 0 8px; }
+  .kicker { color: var(--red); font-family: var(--display); font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; text-decoration: none; }
+  h1 { font-family: var(--display); font-size: clamp(26px, 4vw, 40px); font-weight: 900; letter-spacing: -0.025em; line-height: 1.1; margin: 10px 0 12px; text-wrap: balance; max-width: 26ch; }
+  .spot { font-size: 18px; color: var(--muted); max-width: 60ch; margin: 0 0 16px; }
+  .byline { display: flex; gap: 18px; flex-wrap: wrap; font-family: var(--display); font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 10px 0; }
+  .byline strong { color: var(--ink); font-weight: 700; }
+  .byline .ver { margin-left: auto; }
+  .byline a { color: var(--green); text-decoration: none; font-weight: 700; }
+  .byline a:hover { text-decoration: underline; }
+
+  /* Kontroller */
+  .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 16px 0 6px; }
+  .controls button {
+    font-family: var(--display); font-size: 12.5px; font-weight: 700;
+    padding: 7px 14px; border: 1px solid var(--line-strong); border-radius: 999px;
+    background: transparent; color: var(--ink); cursor: pointer;
+  }
+  .controls button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .controls button:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+  .controls .filter { margin-left: auto; }
+  .controls .filter[aria-pressed="true"] { background: var(--green); border-color: var(--green); color: #fff; }
+
+  /* Ana ızgara */
+  .main { padding: 18px 0 30px; }
+  .main .wrap { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 44px; }
+
+  .art-body { font-size: 17px; max-width: 66ch; }
+  .art-body p { margin: 0 0 16px; }
+  .art-body h2 { font-family: var(--display); font-size: 21px; font-weight: 800; letter-spacing: -0.015em; margin: 28px 0 10px; }
+  .src-tag { font-family: var(--display); font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; vertical-align: 2px; margin-left: 6px; }
+  .src-tag.resmi { background: var(--green-soft); color: var(--green); }
+  .src-tag.bagimsiz { background: var(--line); color: var(--muted); }
+  .src-tag.saha { background: var(--amber-soft); color: var(--amber); }
+  .art-body [data-src].dimmed { opacity: 0.25; }
+  .belge-ref { color: var(--green); font-weight: 700; text-decoration: none; font-family: var(--display); font-size: 14px; }
+  .belge-ref:hover { text-decoration: underline; }
+  .filter-note { display: none; font-family: var(--display); font-size: 13px; background: var(--green-soft); color: var(--green); font-weight: 700; padding: 10px 14px; border-radius: 4px; margin-bottom: 16px; }
+  .filter-note.show { display: block; }
+
+  /* Sağ ray — açılmış karne */
+  aside.rail { align-self: start; display: grid; gap: 18px; }
+  .panel { background: var(--card); border: 1px solid var(--line); padding: 18px 20px; }
+  .panel.trust { border-top: 3px solid var(--green); }
+  .panel h2 { font-family: var(--display); font-size: 13.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 12px; display: flex; align-items: center; gap: 8px; }
+  .tick { width: 20px; height: 20px; border-radius: 50%; background: var(--green); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; flex: none; }
+
+  .src-list { list-style: none; margin: 0; padding: 0; font-family: var(--display); font-size: 13px; }
+  .src-list li { padding: 8px 0; border-bottom: 1px solid var(--line); display: flex; gap: 10px; align-items: baseline; }
+  .src-list li:last-child { border-bottom: 0; }
+  .src-list .st { flex: none; font-weight: 800; }
+  .src-list .st.ok { color: var(--green); }
+  .src-list .st.wait { color: var(--amber); }
+  .src-list .desc { line-height: 1.4; }
+  .src-list .desc small { display: block; color: var(--muted); font-size: 11.5px; }
+
+  .ver-list { list-style: none; margin: 0; padding: 0; font-family: var(--display); font-size: 12.5px; }
+  .ver-list li { display: flex; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); align-items: baseline; }
+  .ver-list li:last-child { border-bottom: 0; }
+  .ver-list .v { font-weight: 800; font-variant-numeric: tabular-nums; flex: none; }
+  .ver-list .h { font-family: var(--mono); font-size: 10.5px; color: var(--muted); margin-left: auto; flex: none; }
+
+  /* Belgeler */
+  .docs { border-top: 1px solid var(--line); padding: 26px 0; background: var(--card); }
+  .docs h2 { font-family: var(--display); font-size: 18px; font-weight: 800; margin: 0 0 4px; }
+  .docs .sub { color: var(--muted); font-style: italic; font-size: 14px; margin: 0 0 18px; }
+  .doc-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+  .doc-card { border: 1px solid var(--line); background: var(--paper); padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+  .doc-card .tur { font-family: var(--display); font-size: 10.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--green); }
+  .doc-card h3 { font-family: var(--display); font-size: 15px; font-weight: 700; line-height: 1.3; margin: 0; }
+  .doc-card .hash { font-family: var(--mono); font-size: 10px; color: var(--muted); word-break: break-all; }
+  .doc-card button {
+    font-family: var(--display); font-size: 12.5px; font-weight: 700;
+    border: 1px solid var(--green); color: var(--green); background: transparent;
+    border-radius: 4px; padding: 8px 12px; cursor: pointer; margin-top: auto;
+  }
+  .doc-card button:hover { background: var(--green-soft); }
+  .doc-card button:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+
+  /* Belge görüntüleyici */
+  .viewer { position: fixed; inset: 0; background: var(--overlay); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 50; }
+  .viewer.open { display: flex; }
+  .viewer-box { background: var(--card); max-width: 640px; width: 100%; max-height: 84vh; overflow-y: auto; border-top: 4px solid var(--green); padding: 24px 28px; }
+  .viewer-box header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+  .viewer-box header h3 { font-family: var(--display); font-size: 17px; font-weight: 800; margin: 0; }
+  .viewer-box header button { margin-left: auto; font-family: var(--display); font-size: 13px; font-weight: 700; border: 1px solid var(--line-strong); background: transparent; color: var(--ink); border-radius: 4px; padding: 6px 12px; cursor: pointer; }
+  .viewer-doc { font-family: var(--mono); font-size: 12.5px; line-height: 1.7; background: var(--paper); border: 1px solid var(--line); padding: 20px; white-space: pre-wrap; }
+  .viewer-meta { font-family: var(--display); font-size: 12px; color: var(--muted); margin-top: 12px; }
+  .viewer-meta code { font-family: var(--mono); font-size: 10.5px; }
+
+  /* Kronoloji (dikey, tam) */
+  .chrono { padding: 30px 0 10px; }
+  .chrono h2 { font-family: var(--display); font-size: 18px; font-weight: 800; margin: 0 0 4px; }
+  .chrono .sub { color: var(--muted); font-style: italic; font-size: 14px; margin: 0 0 22px; }
+  .ch-list { list-style: none; margin: 0; padding: 0 0 0 18px; border-left: 2px solid var(--line-strong); display: grid; gap: 22px; max-width: 620px; }
+  .ch-item { position: relative; }
+  .ch-item::before { content: ""; position: absolute; left: -24px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--ink); }
+  .ch-item.now::before { background: var(--red); }
+  .ch-item time { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .ch-item.now time { color: var(--red); }
+  .ch-item h3 { font-family: var(--display); font-size: 16px; font-weight: 800; margin: 3px 0 4px; }
+  .ch-item p { font-size: 14.5px; color: var(--muted); margin: 0 0 6px; }
+  .ch-item .link-chip { font-family: var(--display); font-size: 11px; font-weight: 700; color: var(--green); border: 1px solid var(--green); border-radius: 999px; padding: 3px 10px; text-decoration: none; }
+  .ch-item .link-chip:hover { background: var(--green-soft); }
+
+  /* Kişi ve kurumlar */
+  .entities { padding: 24px 0 10px; }
+  .entities h2 { font-family: var(--display); font-size: 15px; font-weight: 800; margin: 0 0 12px; }
+  .ent-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ent { font-family: var(--display); font-size: 12.5px; font-weight: 700; border: 1px solid var(--line-strong); border-radius: 999px; padding: 6px 14px; }
+  .ent small { font-weight: 400; color: var(--muted); }
+
+  footer { margin-top: 36px; border-top: 2px solid var(--line-strong); padding: 22px 0 40px; color: var(--muted); font-family: var(--display); font-size: 12.5px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+
+  @media (max-width: 900px) {
+    .main .wrap { grid-template-columns: 1fr; }
+    .doc-grid { grid-template-columns: 1fr; }
+    .controls .filter { margin-left: 0; }
+  }
+</style>
+
+<div class="topbar">
+  <div class="wrap">
+    <span class="proto-badge">Tasarım prototipi · örnek içerik</span>
+    <span class="date">13 Temmuz 2026, Pazar</span>
+  </div>
+</div>
+
+<header class="mast">
+  <div class="wrap">
+    <div class="logo">PROJECT FN<em>.</em></div>
+    <nav class="mainnav" aria-label="Ana menü">
+      <a href="#">Gündem</a>
+      <a href="#" class="active">Dosyalar</a>
+      <a href="#">Doğrulama</a>
+      <a href="#">Ekonomi</a>
+      <a href="#">Video</a>
+      <a href="#">Veri</a>
+    </nav>
+  </div>
+</header>
+
+<section class="art-head">
+  <div class="wrap">
+    <a class="kicker" href="#">Dosya · Kentsel Dönüşüm</a>
+    <h1>Deprem bölgesindeki konut ihalelerinde aynı üç şirket: Belgeler ne anlatıyor?</h1>
+    <p class="spot">Örnek dosya haberi — son iki yılda açılan 41 ihalenin dökümü, kamu kayıtları ve saha görüşmeleriyle birlikte incelendi.</p>
+    <div class="byline">
+      <span>Muhabir: <strong>A. Yılmaz</strong> (temsilî)</span>
+      <span>Yayın: <strong>09:40</strong></span>
+      <span>Son güncelleme: <strong>14:32</strong></span>
+      <span class="ver">Sürüm <a href="#surum">1.2 — geçmişi gör</a></span>
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="controls">
+    <button type="button" data-mode="tam" aria-pressed="true">Tam metin</button>
+    <button type="button" data-mode="ozet" aria-pressed="false">2 dakikada oku</button>
+    <button type="button" data-mode="dinle" aria-pressed="false">Sesli dinle</button>
+    <button type="button" class="filter" id="resmi-filter" aria-pressed="false">Yalnızca resmî kaynaklı bölümler</button>
+  </div>
+</div>
+
+<section class="main">
+  <div class="wrap">
+    <article class="art-body" id="art-body">
+      <p class="filter-note" id="filter-note">Resmî kaynak filtresi açık: yalnızca resmî belge ve kayıtlara dayanan bölümler gösteriliyor. Saha görüşmeleri ve bağımsız kaynaklı bölümler soluklaştırıldı.</p>
+
+      <div id="mode-tam">
+        <p data-src="resmi">Kamu ihale platformu kayıtlarına göre, bölgede son iki yılda açılan 41 konut ihalesinin 28'i üç şirket tarafından kazanıldı. İhale sonuç ilanlarının tam listesi haberin ekindedir. <a class="belge-ref" href="#belgeler">[Belge 1]</a><span class="src-tag resmi">Resmî kayıt</span></p>
+        <p data-src="resmi">Ticaret sicili kayıtları, üç şirketin ortaklık yapılarının iki isim üzerinden kesiştiğini gösteriyor. Şirketlerin kuruluş tarihleri, ilk ihale ilanlarından 4 ila 7 ay öncesine denk geliyor. <a class="belge-ref" href="#belgeler">[Belge 2]</a><span class="src-tag resmi">Resmî kayıt</span></p>
+        <h2 data-src="resmi">Sayıştay raporundaki uyarı</h2>
+        <p data-src="resmi">Ağustos 2025 tarihli Sayıştay raporunda, aynı ihale paketlerine ilişkin "yeterlik kriterlerinin rekabeti daraltacak biçimde belirlendiği" tespitine yer verildi. <a class="belge-ref" href="#belgeler">[Belge 3]</a><span class="src-tag resmi">Resmî kayıt</span></p>
+        <h2 data-src="bagimsiz">Sektörden iki kaynak ne diyor?</h2>
+        <p data-src="bagimsiz">İhale süreçlerine yakın, isimlerinin saklı tutulmasını isteyen iki sektör kaynağı, şartname taslaklarının ilandan önce belirli firmalarla paylaşıldığı iddiasını dile getirdi. Bu iddia, ikinci bir bağımsız kaynak tarafından teyit edildi; ancak yazılı belgeyle henüz desteklenmiyor ve ilgili bölümde bu durum açıkça belirtiliyor.<span class="src-tag bagimsiz">Bağımsız kaynak</span></p>
+        <h2 data-src="saha">Sahadan gözlemler</h2>
+        <p data-src="saha">Muhabirimizin şantiye bölgesindeki gözlemleri ve konut hak sahipleriyle yaptığı görüşmeler, teslim takviminin ilan edilen tarihlerin gerisinde olduğunu gösteriyor. Saha kayıtları konum doğrulamalıdır.<span class="src-tag saha">Saha kaydı</span></p>
+        <h2 data-src="resmi">Tarafların yanıtları</h2>
+        <p data-src="resmi">Üç şirketten ikisi yazılı açıklama gönderdi; açıklamaların tam metni haberin ekindedir. İhaleleri açan kurum, yazılı sorularımıza 12 gündür yanıt vermedi. Yanıt geldiğinde haber güncellenecek ve sürüm geçmişine işlenecektir.<span class="src-tag resmi">Resmî yazışma</span></p>
+      </div>
+
+      <div id="mode-ozet" hidden>
+        <p><strong>Özet:</strong> Kamu kayıtlarına göre 41 ihalenin 28'i, ortaklık yapıları kesişen üç şirkette toplandı. Sayıştay 2025'te rekabet uyarısı yapmıştı. İki bağımsız sektör kaynağı şartnamelerin önceden paylaşıldığını iddia ediyor (belgeyle henüz desteklenmedi). Şirketlerden ikisi yanıt verdi; kurum 12 gündür sessiz.</p>
+        <p><em>Bu özet, onaylı tam metinden üretilmiştir; tasarım örneğidir.</em></p>
+      </div>
+
+      <div id="mode-dinle" hidden>
+        <p>🔊 <strong>Sesli mod:</strong> Bu haber 6 dakikada dinlenebilir. Seslendirme, editör onaylı tam metinden üretilir; kaldığınız cümleden devam eder. <em>(Prototipte ses çalınmaz.)</em></p>
+      </div>
+    </article>
+
+    <aside class="rail">
+      <div class="panel trust" aria-label="Doğrulama karnesi — açık görünüm">
+        <h2><span class="tick">✓</span> Doğrulama Karnesi</h2>
+        <ul class="src-list">
+          <li><span class="st ok">✓</span><span class="desc">Kamu ihale platformu sonuç ilanları<small>Resmî kayıt · 41 ilan · Belge 1</small></span></li>
+          <li><span class="st ok">✓</span><span class="desc">Ticaret sicili ortaklık kayıtları<small>Resmî kayıt · Belge 2</small></span></li>
+          <li><span class="st ok">✓</span><span class="desc">Sayıştay raporu (Ağustos 2025)<small>Resmî belge · Belge 3</small></span></li>
+          <li><span class="st ok">✓</span><span class="desc">İki bağımsız sektör kaynağı<small>Kimlikleri yayın yönetiminde saklıdır · çapraz teyitli</small></span></li>
+          <li><span class="st wait">…</span><span class="desc">İhale kurumunun yanıtı<small>12 gündür bekleniyor · haber güncellenecek</small></span></li>
+        </ul>
+      </div>
+
+      <div class="panel" aria-label="Taraf görüşleri">
+        <h2>Taraf Görüşleri</h2>
+        <ul class="src-list">
+          <li><span class="st ok">✓</span><span class="desc">Şirket A — yazılı açıklama ekli</span></li>
+          <li><span class="st ok">✓</span><span class="desc">Şirket B — yazılı açıklama ekli</span></li>
+          <li><span class="st wait">…</span><span class="desc">Şirket C — ulaşılamadı, süreç sürüyor</span></li>
+          <li><span class="st wait">…</span><span class="desc">İhale kurumu — yanıt bekleniyor</span></li>
+        </ul>
+      </div>
+
+      <div class="panel" id="surum" aria-label="Sürüm geçmişi">
+        <h2>Sürüm Geçmişi</h2>
+        <ul class="ver-list">
+          <li><span class="v">1.0</span><span>İlk yayın · 09:40</span><span class="h">a3f8…c21e</span></li>
+          <li><span class="v">1.1</span><span>Şirket açıklamaları eklendi · 12:15</span><span class="h">7d02…9b4f</span></li>
+          <li><span class="v">1.2</span><span>Belge seti genişletildi · 14:32</span><span class="h">e561…0a8c</span></li>
+        </ul>
+        <p style="font-family: var(--display); font-size: 11.5px; color: var(--muted); margin: 10px 0 0;">Her sürüm, değişmezlik kaydı (hash) ile arşivlenir. Tekzip ve düzeltmeler bu listede ayrıca işaretlenir.</p>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section class="docs" id="belgeler">
+  <div class="wrap">
+    <h2>Haberin Belgeleri</h2>
+    <p class="sub">Habere dayanak olan belgeler; her biri değişmezlik kaydıyla arşivlenmiştir (temsilî içerik).</p>
+    <div class="doc-grid">
+      <div class="doc-card">
+        <span class="tur">Resmî kayıt</span>
+        <h3>İhale sonuç ilanları dökümü (41 ilan)</h3>
+        <span class="hash">SHA-256: a3f8b2…c21e</span>
+        <button type="button" data-doc="d1">Belgeyi görüntüle</button>
+      </div>
+      <div class="doc-card">
+        <span class="tur">Resmî kayıt</span>
+        <h3>Ticaret sicili ortaklık kayıtları</h3>
+        <span class="hash">SHA-256: 7d02e9…9b4f</span>
+        <button type="button" data-doc="d2">Belgeyi görüntüle</button>
+      </div>
+      <div class="doc-card">
+        <span class="tur">Resmî belge</span>
+        <h3>Sayıştay raporu — ilgili bölüm</h3>
+        <span class="hash">SHA-256: e5614a…0a8c</span>
+        <button type="button" data-doc="d3">Belgeyi görüntüle</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="chrono">
+  <div class="wrap">
+    <h2>Dosyanın Tam Kronolojisi</h2>
+    <p class="sub">Bu dosyayı takibe alırsanız, yeni düğüm eklendiğinde bildirim alırsınız.</p>
+    <ol class="ch-list">
+      <li class="ch-item">
+        <time>Mart 2025</time>
+        <h3>İlk ihale paketi ilan edildi</h3>
+        <p>12 ihalelik ilk paket kamu platformunda yayımlandı.</p>
+        <a class="link-chip" href="#belgeler">Belge 1</a>
+      </li>
+      <li class="ch-item">
+        <time>Mayıs 2025</time>
+        <h3>İlk sonuçlar açıklandı</h3>
+        <p>12 ihalenin 9'unu aynı iki şirket kazandı.</p>
+        <a class="link-chip" href="#">İlgili haberi oku</a>
+      </li>
+      <li class="ch-item">
+        <time>Ağustos 2025</time>
+        <h3>Sayıştay raporunda usül uyarısı</h3>
+        <p>"Yeterlik kriterleri rekabeti daraltıyor" tespiti rapora girdi.</p>
+        <a class="link-chip" href="#belgeler">Belge 3</a>
+      </li>
+      <li class="ch-item">
+        <time>Kasım 2025</time>
+        <h3>İkinci ihale paketi</h3>
+        <p>29 ihalelik ikinci paket açıldı; üçüncü şirket bu dönemde devreye girdi.</p>
+        <a class="link-chip" href="#">İlgili haberi oku</a>
+      </li>
+      <li class="ch-item">
+        <time>Şubat 2026</time>
+        <h3>Muhalefet soru önergesi verdi</h3>
+        <p>Önerge metni ve kurumun kısa yanıtı arşivde.</p>
+        <a class="link-chip" href="#">Önerge metni</a>
+      </li>
+      <li class="ch-item now">
+        <time>13 Temmuz 2026 — Bugün</time>
+        <h3>Belgeler yayımlandı, kurum yanıtı bekleniyor</h3>
+        <p>Bu haberle birlikte üç belge kamuoyuna açıldı; kurumun yanıtı geldiğinde dosya güncellenecek.</p>
+        <a class="link-chip" href="#">Dosyayı takibe al</a>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section class="entities">
+  <div class="wrap">
+    <h2 class="label">Bu dosyadaki kişi ve kurumlar (temsilî)</h2>
+    <div class="ent-row">
+      <span class="ent">İhale Kurumu <small>· konu</small></span>
+      <span class="ent">Şirket A <small>· taraf</small></span>
+      <span class="ent">Şirket B <small>· taraf</small></span>
+      <span class="ent">Şirket C <small>· taraf</small></span>
+      <span class="ent">Sayıştay <small>· resmî kaynak</small></span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>PROJECT FN. — Haber detay tasarım prototipi. Tüm içerik temsilidir; gerçek kişi ve kurumları konu almaz.</span>
+    <span>Açık karne · Belge arşivi · Tam kronoloji · Kaynak filtresi</span>
+  </div>
+</footer>
+
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-labelledby="viewer-title">
+  <div class="viewer-box">
+    <header>
+      <h3 id="viewer-title">Belge</h3>
+      <button type="button" id="viewer-close">Kapat ✕</button>
+    </header>
+    <div class="viewer-doc" id="viewer-doc"></div>
+    <p class="viewer-meta">Değişmezlik kaydı: <code id="viewer-hash"></code> · Bu görüntü temsilîdir; gerçek üründe belgenin aslı (PDF/tarama) ve OCR metni birlikte sunulur.</p>
+  </div>
+</div>
+
+<script>
+  (function () {
+    // Okuma modları
+    var modes = { tam: 'mode-tam', ozet: 'mode-ozet', dinle: 'mode-dinle' };
+    document.querySelectorAll('.controls button[data-mode]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.controls button[data-mode]').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+        btn.setAttribute('aria-pressed', 'true');
+        Object.keys(modes).forEach(function (k) {
+          document.getElementById(modes[k]).hidden = (k !== btn.dataset.mode);
+        });
+      });
+    });
+
+    // Resmî kaynak filtresi
+    var filterBtn = document.getElementById('resmi-filter');
+    var note = document.getElementById('filter-note');
+    filterBtn.addEventListener('click', function () {
+      var on = filterBtn.getAttribute('aria-pressed') !== 'true';
+      filterBtn.setAttribute('aria-pressed', String(on));
+      note.classList.toggle('show', on);
+      document.querySelectorAll('#mode-tam [data-src]').forEach(function (el) {
+        el.classList.toggle('dimmed', on && el.dataset.src !== 'resmi');
+      });
+    });
+
+    // Belge görüntüleyici
+    var docs = {
+      d1: { t: 'İhale sonuç ilanları dökümü', h: 'a3f8b2…c21e',
+        c: 'İHALE SONUÇ DÖKÜMÜ (TEMSİLÎ)\n─────────────────────────────\nToplam ilan ....................... 41\nŞirket A .......................... 12\nŞirket B .......................... 10\nŞirket C ...........................  6\nDiğer (9 firma) ................... 13\n\nDönem: Mart 2025 – Haziran 2026\nKaynak: Kamu ihale platformu (temsilî)' },
+      d2: { t: 'Ticaret sicili ortaklık kayıtları', h: '7d02e9…9b4f',
+        c: 'ORTAKLIK KAYDI ÖZETİ (TEMSİLÎ)\n─────────────────────────────\nŞirket A — kuruluş: 11/2024\n  Ortak 1 (%60), Ortak 2 (%40)\nŞirket B — kuruluş: 01/2025\n  Ortak 2 (%55), Ortak 3 (%45)\nŞirket C — kuruluş: 08/2025\n  Ortak 1 (%50), Ortak 3 (%50)\n\nNot: Ortak 1 ve Ortak 2, üç şirketin\nikisinde birlikte yer almaktadır.' },
+      d3: { t: 'Sayıştay raporu — ilgili bölüm', h: 'e5614a…0a8c',
+        c: 'SAYIŞTAY RAPORU, BÖLÜM 4.2 (TEMSİLÎ)\n─────────────────────────────\n"...söz konusu ihale paketlerinde\nyeterlik kriterlerinin, benzer iş\ndeneyim tutarları yönünden rekabeti\ndaraltacak biçimde belirlendiği\ntespit edilmiştir..."\n\nRapor tarihi: Ağustos 2025' }
+    };
+    var viewer = document.getElementById('viewer');
+    var lastFocus = null;
+    function openDoc(id) {
+      var d = docs[id]; if (!d) return;
+      document.getElementById('viewer-title').textContent = d.t;
+      document.getElementById('viewer-doc').textContent = d.c;
+      document.getElementById('viewer-hash').textContent = 'SHA-256: ' + d.h;
+      lastFocus = document.activeElement;
+      viewer.classList.add('open');
+      document.getElementById('viewer-close').focus();
+    }
+    function closeDoc() {
+      viewer.classList.remove('open');
+      if (lastFocus) lastFocus.focus();
+    }
+    document.querySelectorAll('.doc-card button[data-doc]').forEach(function (btn) {
+      btn.addEventListener('click', function () { openDoc(btn.dataset.doc); });
+    });
+    document.getElementById('viewer-close').addEventListener('click', closeDoc);
+    viewer.addEventListener('click', function (e) { if (e.target === viewer) closeDoc(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && viewer.classList.contains('open')) closeDoc(); });
+  })();
+</script>
+</body>
+</html>
