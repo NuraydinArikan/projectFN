@@ -34,7 +34,7 @@ Türkiye'deki mevcut haber siteleri hız ve hacim odaklıdır; okur bir haberin 
 ## Getirdiği yenilik
 
 - **AI, editöre yardım eder — haber yazmaz.** Editör panelinde başlık önerisi ve hukuki risk ön taraması (tekzip riski, eksik bilgi, kişilik hakları) yer alır; nihai karar ve imza her zaman gazetecinindir.
-- **Yayın eşiği koda gömülüdür.** Bir haber, asgari doğrulama (2 kaynak/belge + 1 taraf görüşü) sağlanmadan "yayına gönder" düğmesi açılmaz.
+- **Yayın eşiği koda gömülüdür.** Bir haber için asgari doğrulama (2 kaynak/belge + 1 taraf görüşü) sağlanmadan "yayına gönder" düğmesi aktifleşmez.
 - **TV haberciliğinin akış/hikâye mantığı dijitale taşınır.** Bir olay yalnızca tek bir haber değil; kronoloji, ilgili belgeler, taraflar ve geçmiş gelişmelerle birlikte küçük bir "haber + bilgi grafiği" bütünü olarak sunulur.
 - **Türkiye'ye özgü mimari kararlar ilk günden var:** erişim engeli ihtimaline karşı hash'li sürüm arşivi, tekzip/düzeltme süreçlerinin editoryal iş akışına ve karneye işlenmesi.
 
@@ -44,7 +44,7 @@ Türkiye'deki mevcut haber siteleri hız ve hacim odaklıdır; okur bir haberin 
 - Üç tasarım prototipi → gerçek Next.js sayfalarına dönüştürüldü
 - Supabase projesi kuruldu, şema + güvenlik politikaları + demo veri yüklendi
 - Vercel production'da canlı, GitHub ile otomatik dağıtım bağlantısı kuruldu
-- İlk PR main'e birleşti; proje artık "kod → GitHub → otomatik dağıtım" döngüsünde çalışıyor
+- İlk PR main dalına birleştirildi; proje artık "kod → GitHub → otomatik dağıtım" döngüsünde çalışıyor
 
 ## Bundan sonra yapılması gerekenler
 
