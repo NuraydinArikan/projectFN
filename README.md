@@ -30,6 +30,7 @@ Sayfalar: `/` ana sayfa · `/haber/[slug]` haber detay · `/editor` editör pane
 - [Haber Detay Prototipi](tasarim/haberdetay.html) — açılmış doğrulama karnesi, belge görüntüleyici, tam kronoloji ve resmî kaynak filtresi
 - [Editör Paneli Prototipi](tasarim/editorpaneli.html) — canlı doğrulama karnesi, yayın eşiği, hukuki risk ön taraması ve AI başlık önerileri
 - [Geliştirme Planı](docs/GELISTIRME-PLANI.md) — prototiplerden canlı koda geçiş aşamaları (Next.js + Supabase)
+- [Yönetici Özeti](docs/YONETICI-OZETI.md) — projenin tek sayfalık güncel durumu; yeni bir sohbette bağlam olarak kullanılabilir
 
 ## Çalışma ilkesi
 
