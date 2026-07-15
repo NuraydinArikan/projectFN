@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project FN — Ana Sayfa Tasarım Prototipi</title>
+</head>
+<body>
+<style>
+  :root {
+    --paper: #FBFBF8;
+    --card: #FFFFFF;
+    --ink: #14181D;
+    --muted: #5B6470;
+    --line: rgba(20, 24, 29, 0.14);
+    --line-strong: rgba(20, 24, 29, 0.55);
+    --red: #B5121B;
+    --green: #157A5B;
+    --green-soft: rgba(21, 122, 91, 0.10);
+    --amber: #9A6A00;
+    --amber-soft: rgba(154, 106, 0, 0.10);
+    --display: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --body: Georgia, "Times New Roman", serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #15181C;
+      --card: #1C2026;
+      --ink: #E8E6DF;
+      --muted: #9AA1AB;
+      --line: rgba(232, 230, 223, 0.16);
+      --line-strong: rgba(232, 230, 223, 0.55);
+      --red: #E24C55;
+      --green: #3FA98A;
+      --green-soft: rgba(63, 169, 138, 0.14);
+      --amber: #D9A83C;
+      --amber-soft: rgba(217, 168, 60, 0.14);
+    }
+  }
+  :root[data-theme="light"] {
+    --paper: #FBFBF8; --card: #FFFFFF; --ink: #14181D; --muted: #5B6470;
+    --line: rgba(20,24,29,0.14); --line-strong: rgba(20,24,29,0.55);
+    --red: #B5121B; --green: #157A5B; --green-soft: rgba(21,122,91,0.10);
+    --amber: #9A6A00; --amber-soft: rgba(154,106,0,0.10);
+  }
+  :root[data-theme="dark"] {
+    --paper: #15181C; --card: #1C2026; --ink: #E8E6DF; --muted: #9AA1AB;
+    --line: rgba(232,230,223,0.16); --line-strong: rgba(232,230,223,0.55);
+    --red: #E24C55; --green: #3FA98A; --green-soft: rgba(63,169,138,0.14);
+    --amber: #D9A83C; --amber-soft: rgba(217,168,60,0.14);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--body);
+    line-height: 1.55;
+  }
+  .wrap { max-width: 1140px; margin: 0 auto; padding: 0 20px; }
+
+  .label {
+    font-family: var(--display);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ── Üst şerit ─────────────────────────── */
+  .topbar {
+    border-bottom: 1px solid var(--line);
+    font-family: var(--display);
+    font-size: 12px;
+  }
+  .topbar .wrap {
+    display: flex; align-items: center; gap: 16px;
+    padding-top: 8px; padding-bottom: 8px;
+  }
+  .proto-badge {
+    background: var(--amber-soft);
+    color: var(--amber);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+  .topbar .date { color: var(--muted); }
+  .topbar .live {
+    margin-left: auto;
+    display: flex; align-items: center; gap: 7px;
+    color: var(--red); font-weight: 700;
+  }
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--red);
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }
+  @media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+
+  /* ── Masthead ─────────────────────────── */
+  header.mast { padding: 34px 0 22px; }
+  .mast .wrap { display: flex; align-items: baseline; gap: 20px; flex-wrap: wrap; }
+  .logo {
+    font-family: var(--display);
+    font-size: clamp(38px, 6vw, 56px);
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+  .logo em { font-style: normal; color: var(--red); }
+  .tagline {
+    font-family: var(--body);
+    font-style: italic;
+    color: var(--muted);
+    font-size: 15px;
+  }
+  nav.mainnav {
+    border-top: 2px solid var(--line-strong);
+    border-bottom: 1px solid var(--line);
+  }
+  nav.mainnav .wrap {
+    display: flex; gap: 4px;
+    overflow-x: auto;
+  }
+  nav.mainnav a {
+    font-family: var(--display);
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 11px 14px;
+    white-space: nowrap;
+  }
+  nav.mainnav a:hover, nav.mainnav a:focus-visible { color: var(--red); outline: none; }
+  nav.mainnav a:focus-visible { text-decoration: underline; text-underline-offset: 4px; }
+  nav.mainnav a.active { box-shadow: inset 0 -3px 0 var(--red); }
+
+  /* ── Hero ─────────────────────────────── */
+  .hero { padding: 36px 0 28px; }
+  .hero .wrap {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 320px;
+    gap: 40px;
+  }
+  .kicker { color: var(--red); font-family: var(--display); font-size: 12px; font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; }
+  h1.headline {
+    font-family: var(--display);
+    font-size: clamp(28px, 4.4vw, 44px);
+    font-weight: 900;
+    letter-spacing: -0.025em;
+    line-height: 1.08;
+    margin: 10px 0 14px;
+    text-wrap: balance;
+  }
+  .spot { font-size: 18px; color: var(--muted); max-width: 62ch; margin: 0 0 18px; }
+
+  .modes { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
+  .modes button {
+    font-family: var(--display);
+    font-size: 12.5px; font-weight: 700;
+    padding: 7px 14px;
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+  .modes button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .modes button:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+
+  .hero-body { font-size: 16.5px; max-width: 66ch; }
+  .hero-body p { margin: 0 0 12px; }
+
+  /* Doğrulama karnesi */
+  aside.trust {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--green);
+    padding: 20px;
+    align-self: start;
+  }
+  .trust h2 {
+    font-family: var(--display);
+    font-size: 14px; font-weight: 800;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    margin: 0 0 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .trust h2 .tick {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--green); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 12px; flex: none;
+  }
+  .trust ul { list-style: none; margin: 0; padding: 0; font-family: var(--display); font-size: 13.5px; }
+  .trust li {
+    display: flex; justify-content: space-between; gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .trust li:last-child { border-bottom: 0; }
+  .trust .val { font-weight: 700; font-variant-numeric: tabular-nums; }
+  .trust .ok { color: var(--green); }
+  .trust .doc-link {
+    display: block; margin-top: 14px;
+    font-family: var(--display); font-size: 13px; font-weight: 700;
+    color: var(--green); text-decoration: none;
+    border: 1px solid var(--green);
+    border-radius: 4px;
+    padding: 9px 12px; text-align: center;
+  }
+  .trust .doc-link:hover { background: var(--green-soft); }
+
+  /* ── Kronoloji ────────────────────────── */
+  .timeline { border-top: 1px solid var(--line); padding: 22px 0 26px; }
+  .timeline .label { margin-bottom: 16px; display: block; }
+  .tl-track { display: flex; gap: 0; overflow-x: auto; padding-bottom: 6px; }
+  .tl-item { flex: 1 0 200px; position: relative; padding: 0 18px 0 0; }
+  .tl-item::before {
+    content: "";
+    display: block;
+    height: 2px; background: var(--line-strong);
+    margin-bottom: 14px;
+  }
+  .tl-item::after {
+    content: "";
+    position: absolute; top: -3px; left: 0;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--ink);
+  }
+  .tl-item.now::after { background: var(--red); }
+  .tl-item time { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; color: var(--muted); text-transform: uppercase; }
+  .tl-item p { font-family: var(--display); font-size: 13.5px; font-weight: 600; margin: 4px 0 0; line-height: 1.35; }
+  .tl-item.now time { color: var(--red); }
+
+  /* ── Karşılaştırma modülü ─────────────── */
+  .coverage { background: var(--card); border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 26px 0; }
+  .coverage h2 {
+    font-family: var(--display); font-size: 18px; font-weight: 800;
+    letter-spacing: -0.01em; margin: 0 0 4px;
+  }
+  .coverage .sub { color: var(--muted); font-size: 14px; font-style: italic; margin: 0 0 18px; }
+  .cov-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+  .cov-card { border: 1px solid var(--line); padding: 14px 16px; background: var(--paper); }
+  .cov-card .src { font-family: var(--display); font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .cov-card p { font-family: var(--display); font-size: 14.5px; font-weight: 600; line-height: 1.35; margin: 6px 0 10px; }
+  .tone { font-family: var(--display); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 3px; }
+  .tone.resmi { background: var(--green-soft); color: var(--green); }
+  .tone.yorum { background: var(--amber-soft); color: var(--amber); }
+  .tone.notr  { background: var(--line); color: var(--muted); }
+
+  /* ── Haber ızgarası ───────────────────── */
+  .stories { padding: 30px 0 10px; }
+  .stories .wrap { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; }
+  .story-list { display: grid; grid-template-columns: 1fr 1fr; gap: 26px 28px; }
+  article.story { border-top: 2px solid var(--line-strong); padding-top: 12px; }
+  article.story .kicker { font-size: 11px; }
+  article.story h3 {
+    font-family: var(--display); font-size: 19px; font-weight: 800;
+    letter-spacing: -0.015em; line-height: 1.2;
+    margin: 6px 0 8px; text-wrap: balance;
+  }
+  article.story h3 a { color: inherit; text-decoration: none; }
+  article.story h3 a:hover { color: var(--red); }
+  article.story .sum { font-size: 14.5px; color: var(--muted); margin: 0 0 10px; }
+  .kunye { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    font-family: var(--display); font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 3px 8px; border-radius: 3px;
+    background: var(--line); color: var(--muted);
+  }
+  .chip.ok { background: var(--green-soft); color: var(--green); }
+  .chip.warn { background: var(--amber-soft); color: var(--amber); }
+
+  aside.akis { border-left: 1px solid var(--line); padding-left: 24px; }
+  aside.akis h2 { font-family: var(--display); font-size: 14px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; margin: 0 0 14px; }
+  .akis-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .akis-item time { font-family: var(--display); font-size: 12px; font-weight: 700; color: var(--red); font-variant-numeric: tabular-nums; flex: none; }
+  .akis-item p { font-family: var(--display); font-size: 13.5px; font-weight: 600; margin: 0; line-height: 1.35; }
+
+  footer {
+    margin-top: 40px;
+    border-top: 2px solid var(--line-strong);
+    padding: 22px 0 40px;
+    color: var(--muted);
+    font-family: var(--display); font-size: 12.5px;
+  }
+  footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+
+  @media (max-width: 880px) {
+    .hero .wrap, .stories .wrap { grid-template-columns: 1fr; }
+    aside.akis { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 20px; }
+    .cov-grid { grid-template-columns: 1fr; }
+    .story-list { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="topbar">
+  <div class="wrap">
+    <span class="proto-badge">Tasarım prototipi · örnek içerik</span>
+    <span class="date">13 Temmuz 2026, Pazar</span>
+    <span class="live"><span class="live-dot"></span> CANLI</span>
+  </div>
+</div>
+
+<header class="mast">
+  <div class="wrap">
+    <div class="logo">PROJECT FN<em>.</em></div>
+    <div class="tagline">Haber, doğrulanabilir bir bilgi nesnesidir.</div>
+  </div>
+</header>
+
+<nav class="mainnav" aria-label="Ana menü">
+  <div class="wrap">
+    <a href="#" class="active">Gündem</a>
+    <a href="#">Dosyalar</a>
+    <a href="#">Doğrulama</a>
+    <a href="#">Ekonomi</a>
+    <a href="#">Ankara</a>
+    <a href="#">Video</a>
+    <a href="#">Veri</a>
+    <a href="#">Arşiv</a>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <span class="kicker">Dosya · Kentsel Dönüşüm</span>
+      <h1 class="headline">Deprem bölgesindeki konut ihalelerinde aynı üç şirket: Belgeler ne anlatıyor?</h1>
+      <p class="spot">Örnek dosya haberi — son iki yılda açılan 41 ihalenin dökümü, kamu kayıtları ve saha görüşmeleriyle birlikte incelendi.</p>
+
+      <div class="modes" role="group" aria-label="Okuma modu">
+        <button type="button" data-mode="ozet" aria-pressed="true">2 dakikada oku</button>
+        <button type="button" data-mode="detay" aria-pressed="false">Detaylı anlatım</button>
+        <button type="button" data-mode="dinle" aria-pressed="false">Sesli dinle</button>
+      </div>
+
+      <div class="hero-body" id="hero-body">
+        <p><strong>Özet:</strong> Kamu ihale kayıtlarına göre 41 ihalenin 28'i üç şirkette toplandı. Şirketlerin ortaklık yapıları kesişiyor. İlgili kurum yazılı sorularımıza 12 gündür yanıt vermedi. Tarafların tümünün görüşüne yer verilmiştir.</p>
+        <p><em>Bu modül, okurun aynı haberi özet, detay veya sesli formatta tüketebilmesini gösteren tasarım örneğidir.</em></p>
+      </div>
+    </div>
+
+    <aside class="trust" aria-label="Doğrulama karnesi">
+      <h2><span class="tick">✓</span> Doğrulama Karnesi</h2>
+      <ul>
+        <li><span>Bağımsız kaynak</span><span class="val ok">3 ✓</span></li>
+        <li><span>Resmî belge</span><span class="val ok">7 belge</span></li>
+        <li><span>Taraf görüşü</span><span class="val ok">4 / 4</span></li>
+        <li><span>Tekzip / düzeltme</span><span class="val">Yok</span></li>
+        <li><span>Son güncelleme</span><span class="val">14:32</span></li>
+      </ul>
+      <a class="doc-link" href="#">Belgeleri ve kaynakları incele →</a>
+    </aside>
+  </div>
+</section>
+
+<section class="timeline">
+  <div class="wrap">
+    <span class="label">Haberin Kronolojisi</span>
+    <div class="tl-track">
+      <div class="tl-item">
+        <time>Mart 2025</time>
+        <p>İlk ihale paketi ilan edildi</p>
+      </div>
+      <div class="tl-item">
+        <time>Ağustos 2025</time>
+        <p>Sayıştay raporunda usül uyarısı</p>
+      </div>
+      <div class="tl-item">
+        <time>Şubat 2026</time>
+        <p>Muhalefet soru önergesi verdi</p>
+      </div>
+      <div class="tl-item now">
+        <time>Bugün</time>
+        <p>Belgeler yayımlandı, kurum yanıtı bekleniyor</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="coverage">
+  <div class="wrap">
+    <h2>Bu haberi kim, nasıl verdi?</h2>
+    <p class="sub">Aynı olayın farklı yayın organlarındaki sunumu — Ground News yaklaşımının Türkçe uyarlaması (temsili örnek).</p>
+    <div class="cov-grid">
+      <div class="cov-card">
+        <span class="src">Resmî Ajans</span>
+        <p>"Konut projelerinde çalışmalar hızlandı"</p>
+        <span class="tone resmi">Resmî açıklama odaklı</span>
+      </div>
+      <div class="cov-card">
+        <span class="src">Ulusal TV</span>
+        <p>"İhale tartışması büyüyor: Muhalefetten sert tepki"</p>
+        <span class="tone yorum">Siyasi tepki odaklı</span>
+      </div>
+      <div class="cov-card">
+        <span class="src">Bağımsız Site</span>
+        <p>"41 ihalenin 28'i üç şirkete gitti"</p>
+        <span class="tone notr">Belge odaklı</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="stories">
+  <div class="wrap">
+    <div class="story-list">
+      <article class="story">
+        <span class="kicker">Ekonomi</span>
+        <h3><a href="#">Merkez Bankası faiz kararını açıkladı: Piyasalar nasıl karşıladı?</a></h3>
+        <p class="sum">Karar metninin satır arası analizi ve üç ekonomistin değerlendirmesiyle.</p>
+        <div class="kunye">
+          <span class="chip ok">✓ 2 bağımsız kaynak</span>
+          <span class="chip">Resmî metin ekli</span>
+        </div>
+      </article>
+      <article class="story">
+        <span class="kicker">Ankara</span>
+        <h3><a href="#">Yeni yargı paketi taslağı komisyonda: Madde madde ne değişiyor?</a></h3>
+        <p class="sum">Taslak metin ile mevcut kanunun karşılaştırmalı tablosu haberin içinde.</p>
+        <div class="kunye">
+          <span class="chip ok">✓ Belge doğrulandı</span>
+          <span class="chip">Kanun maddesi görüntülenebilir</span>
+        </div>
+      </article>
+      <article class="story">
+        <span class="kicker">Saha</span>
+        <h3><a href="#">Muhabir bildiriyor: Hatay'da konteyner kentlerde son durum</a></h3>
+        <p class="sum">Konum doğrulamalı saha kaydı; ses, fotoğraf ve kısa video ekli.</p>
+        <div class="kunye">
+          <span class="chip ok">✓ Muhabir sahada</span>
+          <span class="chip">Konum doğrulandı</span>
+        </div>
+      </article>
+      <article class="story">
+        <span class="kicker">Doğrulama</span>
+        <h3><a href="#">Sosyal medyada dolaşan "zam listesi" gerçek mi?</a></h3>
+        <p class="sum">Listenin kaynağı bulunamadı; kurumun yalanlama metni haberde.</p>
+        <div class="kunye">
+          <span class="chip warn">⚠ Tek kaynak — teyit sürüyor</span>
+        </div>
+      </article>
+    </div>
+
+    <aside class="akis" aria-label="Gündem akışı">
+      <h2>Gündem Akışı</h2>
+      <div class="akis-item"><time>14:32</time><p>İhale dosyası güncellendi: kurum yanıtı bekleniyor</p></div>
+      <div class="akis-item"><time>13:10</time><p>Faiz kararı açıklandı</p></div>
+      <div class="akis-item"><time>11:45</time><p>Yargı paketi komisyon görüşmesi başladı</p></div>
+      <div class="akis-item"><time>09:20</time><p>Hatay saha kaydı yayında</p></div>
+    </aside>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>PROJECT FN. — Tasarım prototipi. Tüm haberler temsilidir; gerçek kişi ve kurumları konu almaz.</span>
+    <span>Doğrulama karnesi · Kronoloji · Okuma modları · Kaynak karşılaştırma</span>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var body = document.getElementById('hero-body');
+    var texts = {
+      ozet: '<p><strong>Özet:</strong> Kamu ihale kayıtlarına göre 41 ihalenin 28\'i üç şirkette toplandı. Şirketlerin ortaklık yapıları kesişiyor. İlgili kurum yazılı sorularımıza 12 gündür yanıt vermedi. Tarafların tümünün görüşüne yer verilmiştir.</p><p><em>Bu modül, okurun aynı haberi özet, detay veya sesli formatta tüketebilmesini gösteren tasarım örneğidir.</em></p>',
+      detay: '<p>Detaylı anlatım modunda okur; ihale ilanlarının tam listesini, şirket ortaklık şemasını, Sayıştay raporunun ilgili bölümlerini ve dört tarafın tam açıklamalarını sıralı olarak görür. Her iddianın yanında dayanak belgesine giden bağlantı yer alır.</p><p>Metin, muhabirin saha notlarıyla zenginleştirilir; okur isterse yalnızca resmî kaynaklı bölümleri filtreleyebilir.</p><p><em>Bu içerik tasarım örneğidir.</em></p>',
+      dinle: '<p>🔊 <strong>Sesli mod:</strong> Haber, yapay zekâ destekli seslendirme ile 4 dakikada dinlenebilir. Araçta, yürüyüşte veya ekrana bakamadığınız her an — kaldığınız cümleden devam eder.</p><p><em>Prototipte ses çalınmaz; bu modül tasarım örneğidir.</em></p>'
+    };
+    document.querySelectorAll('.modes button').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.modes button').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+        btn.setAttribute('aria-pressed', 'true');
+        body.innerHTML = texts[btn.dataset.mode] || texts.ozet;
+      });
+    });
+  })();
+</script>
+</body>
+</html>

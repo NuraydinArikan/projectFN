@@ -8,14 +8,28 @@
 
 | Klasör | İçerik |
 |---|---|
-| `docs/` | Vizyon dokümanı, veri modeli ve ürün kararları |
+| `docs/` | Vizyon dokümanı, veri modeli, geliştirme planı ve ürün kararları |
 | `tasarim/` | HTML tasarım prototipleri (tarayıcıda doğrudan açılabilir) |
+| `src/` | Next.js uygulaması (ana sayfa, haber detay, editör paneli) |
+| `supabase/` | Veritabanı şeması ve migration dosyaları |
+
+## Uygulamayı çalıştırma
+
+```bash
+npm install
+npm run dev   # http://localhost:3000
+```
+
+Sayfalar: `/` ana sayfa · `/haber/[slug]` haber detay · `/editor` editör paneli. Supabase bağlantısı olmadan tohum veriyle çalışır; bağlantı için `.env.example` ve `docs/GELISTIRME-PLANI.md`.
 
 ## Başlangıç noktaları
 
 - [Vizyon Dokümanı](docs/VIZYON.md) — projenin omurgası, farklılaştırıcı özellikler ve yol haritası
 - [Veri Modeli](docs/VERI-MODELI.md) — "haber = bilgi nesnesi" yaklaşımının ilk şeması
 - [Ana Sayfa Prototipi](tasarim/anasayfa.html) — doğrulama karnesi, kronoloji, okuma modları ve kaynak karşılaştırma modülleri
+- [Haber Detay Prototipi](tasarim/haberdetay.html) — açılmış doğrulama karnesi, belge görüntüleyici, tam kronoloji ve resmî kaynak filtresi
+- [Editör Paneli Prototipi](tasarim/editorpaneli.html) — canlı doğrulama karnesi, yayın eşiği, hukuki risk ön taraması ve AI başlık önerileri
+- [Geliştirme Planı](docs/GELISTIRME-PLANI.md) — prototiplerden canlı koda geçiş aşamaları (Next.js + Supabase)
 
 ## Çalışma ilkesi
 

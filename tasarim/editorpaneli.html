@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project FN — Editör Paneli Tasarım Prototipi</title>
+</head>
+<body>
+<style>
+  :root {
+    --paper: #F3F4F2;
+    --card: #FFFFFF;
+    --ink: #14181D;
+    --muted: #5B6470;
+    --line: rgba(20, 24, 29, 0.14);
+    --line-strong: rgba(20, 24, 29, 0.55);
+    --red: #B5121B;
+    --red-soft: rgba(181, 18, 27, 0.09);
+    --green: #157A5B;
+    --green-soft: rgba(21, 122, 91, 0.10);
+    --amber: #9A6A00;
+    --amber-soft: rgba(154, 106, 0, 0.12);
+    --display: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --body: Georgia, "Times New Roman", serif;
+    --mono: "SF Mono", "Cascadia Code", Consolas, "Courier New", monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #101317; --card: #1C2026; --ink: #E8E6DF; --muted: #9AA1AB;
+      --line: rgba(232,230,223,0.16); --line-strong: rgba(232,230,223,0.55);
+      --red: #E24C55; --red-soft: rgba(226,76,85,0.12);
+      --green: #3FA98A; --green-soft: rgba(63,169,138,0.14);
+      --amber: #D9A83C; --amber-soft: rgba(217,168,60,0.14);
+    }
+  }
+  :root[data-theme="light"] {
+    --paper: #F3F4F2; --card: #FFFFFF; --ink: #14181D; --muted: #5B6470;
+    --line: rgba(20,24,29,0.14); --line-strong: rgba(20,24,29,0.55);
+    --red: #B5121B; --red-soft: rgba(181,18,27,0.09);
+    --green: #157A5B; --green-soft: rgba(21,122,91,0.10);
+    --amber: #9A6A00; --amber-soft: rgba(154,106,0,0.12);
+  }
+  :root[data-theme="dark"] {
+    --paper: #101317; --card: #1C2026; --ink: #E8E6DF; --muted: #9AA1AB;
+    --line: rgba(232,230,223,0.16); --line-strong: rgba(232,230,223,0.55);
+    --red: #E24C55; --red-soft: rgba(226,76,85,0.12);
+    --green: #3FA98A; --green-soft: rgba(63,169,138,0.14);
+    --amber: #D9A83C; --amber-soft: rgba(217,168,60,0.14);
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--display); line-height: 1.5; font-size: 14px; }
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 18px; }
+  button { font-family: var(--display); cursor: pointer; }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+
+  /* Üst çubuk */
+  .appbar { background: var(--card); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 10; }
+  .appbar .wrap { display: flex; align-items: center; gap: 14px; padding-top: 10px; padding-bottom: 10px; }
+  .logo { font-weight: 900; font-size: 17px; letter-spacing: -0.02em; }
+  .logo em { font-style: normal; color: var(--red); }
+  .logo small { font-weight: 600; color: var(--muted); margin-left: 8px; letter-spacing: 0.08em; text-transform: uppercase; font-size: 10px; }
+  .proto-badge { background: var(--amber-soft); color: var(--amber); font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; font-size: 10px; padding: 3px 8px; border-radius: 3px; }
+  .appbar .right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+  .status-pill { font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 12px; border-radius: 999px; background: var(--line); color: var(--muted); }
+  .status-pill.editorde { background: var(--amber-soft); color: var(--amber); }
+  .status-pill.hazir { background: var(--green-soft); color: var(--green); }
+  .btn { border: 1px solid var(--line-strong); background: transparent; color: var(--ink); font-weight: 700; font-size: 13px; border-radius: 5px; padding: 8px 14px; }
+  .btn:hover { background: var(--line); }
+  .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn.primary:hover { filter: brightness(1.08); }
+  .btn.primary:disabled { background: var(--line); border-color: var(--line); color: var(--muted); cursor: not-allowed; filter: none; }
+
+  /* Ana ızgara */
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px; padding: 20px 0 60px; align-items: start; }
+
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 6px; }
+  .panel > header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+  .panel > header h2 { font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin: 0; }
+  .panel > header .hint { margin-left: auto; font-size: 11px; color: var(--muted); }
+  .panel .pad { padding: 16px; }
+
+  /* Editör alanı */
+  .editor .pad { display: grid; gap: 14px; }
+  .field label { display: block; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+  .field input[type="text"], .field textarea, .field select {
+    width: 100%; border: 1px solid var(--line); border-radius: 5px;
+    background: var(--paper); color: var(--ink); padding: 10px 12px; font-size: 14px; font-family: var(--display);
+  }
+  .field textarea.govde { font-family: var(--body); font-size: 16px; line-height: 1.65; min-height: 260px; resize: vertical; }
+  .field input.baslik { font-weight: 800; font-size: 19px; letter-spacing: -0.01em; }
+  .oneri-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .oneri {
+    border: 1px dashed var(--line-strong); background: transparent; color: var(--ink);
+    font-size: 12.5px; font-weight: 600; border-radius: 999px; padding: 6px 12px; text-align: left;
+  }
+  .oneri:hover { background: var(--green-soft); border-color: var(--green); color: var(--green); }
+  .oneri::before { content: "✦ "; color: var(--green); }
+  .ai-note { font-size: 11.5px; color: var(--muted); }
+  .ai-note strong { color: var(--green); }
+
+  /* Sağ ray */
+  .rail { display: grid; gap: 16px; }
+
+  /* Karne */
+  .karne header { border-top: 3px solid var(--green); border-radius: 6px 6px 0 0; }
+  .karne-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 4px; }
+  .karne-item { border: 1px solid var(--line); border-radius: 5px; padding: 10px 12px; }
+  .karne-item .num { font-size: 22px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .karne-item .num.ok { color: var(--green); }
+  .karne-item .num.zero { color: var(--muted); }
+  .karne-item .t { font-size: 10.5px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .karne-note { font-size: 11.5px; color: var(--muted); margin: 8px 0 0; }
+  .karne-note.ok { color: var(--green); font-weight: 700; }
+
+  .kayit-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 6px; }
+  .kayit-list li { display: flex; align-items: baseline; gap: 8px; font-size: 12.5px; border-bottom: 1px solid var(--line); padding-bottom: 6px; }
+  .kayit-list .tur-chip { flex: none; font-size: 9.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 7px; border-radius: 3px; }
+  .tur-chip.resmi { background: var(--green-soft); color: var(--green); }
+  .tur-chip.bagimsiz { background: var(--line); color: var(--muted); }
+  .tur-chip.belge { background: var(--green-soft); color: var(--green); }
+  .tur-chip.taraf { background: var(--amber-soft); color: var(--amber); }
+  .kayit-list .sil { margin-left: auto; border: 0; background: transparent; color: var(--muted); font-size: 12px; padding: 0 4px; }
+  .kayit-list .sil:hover { color: var(--red); }
+
+  .ekle-form { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 12px; border-top: 1px dashed var(--line-strong); padding-top: 12px; }
+  .ekle-form .row { display: flex; gap: 8px; }
+  .ekle-form select { flex: none; width: 40%; }
+  .ekle-form input, .ekle-form select { border: 1px solid var(--line); border-radius: 5px; background: var(--paper); color: var(--ink); padding: 8px 10px; font-size: 12.5px; font-family: var(--display); min-width: 0; }
+  .ekle-form input { flex: 1; }
+  .ekle-form .btn { padding: 8px 12px; font-size: 12.5px; }
+
+  /* Risk paneli */
+  .risk header { border-top: 3px solid var(--amber); border-radius: 6px 6px 0 0; }
+  .risk-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .risk-item { border: 1px solid var(--line); border-left: 4px solid var(--amber); border-radius: 5px; padding: 10px 12px; }
+  .risk-item.yuksek { border-left-color: var(--red); }
+  .risk-item.cozuldu { border-left-color: var(--green); opacity: 0.6; }
+  .risk-item .sev { font-size: 9.5px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+  .risk-item.yuksek .sev { color: var(--red); }
+  .risk-item:not(.yuksek):not(.cozuldu) .sev { color: var(--amber); }
+  .risk-item.cozuldu .sev { color: var(--green); }
+  .risk-item h3 { font-size: 13px; font-weight: 800; margin: 3px 0 4px; }
+  .risk-item p { font-size: 12px; color: var(--muted); margin: 0 0 8px; }
+  .risk-item p q { font-family: var(--body); font-style: italic; color: var(--ink); }
+  .risk-item .coz { border: 1px solid var(--green); color: var(--green); background: transparent; font-size: 11.5px; font-weight: 700; border-radius: 4px; padding: 4px 10px; }
+  .risk-item .coz:hover { background: var(--green-soft); }
+  .risk-item.cozuldu .coz { display: none; }
+  .risk-note { font-size: 11px; color: var(--muted); margin: 10px 0 0; }
+
+  footer.note { border-top: 1px solid var(--line); padding: 18px 0 40px; color: var(--muted); font-size: 12px; }
+  footer.note .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+  @media (max-width: 940px) {
+    .layout { grid-template-columns: 1fr; }
+    .appbar .wrap { flex-wrap: wrap; }
+    .appbar .right { margin-left: 0; width: 100%; justify-content: flex-end; }
+  }
+</style>
+
+<div class="appbar">
+  <div class="wrap">
+    <span class="logo">PROJECT FN<em>.</em><small>Editör Paneli</small></span>
+    <span class="proto-badge">Tasarım prototipi</span>
+    <div class="right">
+      <span class="status-pill editorde" id="durum">Taslak</span>
+      <button class="btn" type="button" id="kaydet">Taslağı kaydet</button>
+      <button class="btn primary" type="button" id="yayinla" disabled title="Doğrulama eşiği sağlanmadan yayına gönderilemez">Yayına gönder</button>
+    </div>
+  </div>
+</div>
+
+<main class="wrap">
+  <div class="layout">
+
+    <!-- Sol: metin editörü -->
+    <section class="panel editor" aria-label="Haber editörü">
+      <header>
+        <h2>Haber Metni</h2>
+        <span class="hint">Dosya: Kentsel Dönüşüm · Muhabir: A. Yılmaz (temsilî)</span>
+      </header>
+      <div class="pad">
+        <div class="field">
+          <label for="baslik">Başlık</label>
+          <input class="baslik" id="baslik" type="text" value="Deprem bölgesindeki konut ihaleleri hakkında haber">
+          <div style="margin-top: 8px;">
+            <span class="ai-note"><strong>✦ AI başlık önerileri</strong> — tıklayınca uygulanır, imza gazetecinindir:</span>
+            <div class="oneri-row" style="margin-top: 6px;">
+              <button class="oneri" type="button">Deprem bölgesindeki konut ihalelerinde aynı üç şirket: Belgeler ne anlatıyor?</button>
+              <button class="oneri" type="button">41 ihalenin 28'i üç şirkete gitti: Ortaklık kayıtları kesişiyor</button>
+              <button class="oneri" type="button">Sayıştay uyarmıştı: İhale dosyasında yeni belgeler</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="spot">Spot</label>
+          <input id="spot" type="text" value="Son iki yılda açılan 41 ihalenin dökümü, kamu kayıtları ve saha görüşmeleriyle birlikte incelendi.">
+        </div>
+
+        <div class="field">
+          <label for="govde">Gövde</label>
+          <textarea class="govde" id="govde">Kamu ihale platformu kayıtlarına göre, bölgede son iki yılda açılan 41 konut ihalesinin 28'i üç şirket tarafından kazanıldı.
+
+Ticaret sicili kayıtları, üç şirketin ortaklık yapılarının iki isim üzerinden kesiştiğini gösteriyor.
+
+İhale süreçlerine yakın iki sektör kaynağı, şartname taslaklarının ilandan önce belirli firmalarla paylaşıldığını söyledi. Bu bilgi kesindir.
+
+Üç şirketten ikisi yazılı açıklama gönderdi. İhaleleri açan kurum, yazılı sorularımıza 12 gündür yanıt vermedi.</textarea>
+        </div>
+
+        <span class="ai-note"><strong>✦ AI yardımcıları:</strong> Bültenden taslak oluştur · SEO düzenle · Eski haberleri ilişkilendir · Etiket öner — <em>bu prototipte görsel olarak temsil edilmektedir; AI hiçbir metni editör onayı olmadan yayımlayamaz.</em></span>
+      </div>
+    </section>
+
+    <!-- Sağ ray -->
+    <div class="rail">
+
+      <!-- Doğrulama karnesi (canlı) -->
+      <section class="panel karne" aria-label="Doğrulama karnesi">
+        <header>
+          <h2>Doğrulama Karnesi</h2>
+          <span class="hint">elle doldurulamaz — kayıtlardan türetilir</span>
+        </header>
+        <div class="pad">
+          <div class="karne-grid">
+            <div class="karne-item"><div class="num zero" id="n-kaynak">0</div><div class="t">Bağımsız kaynak</div></div>
+            <div class="karne-item"><div class="num zero" id="n-belge">0</div><div class="t">Resmî belge</div></div>
+            <div class="karne-item"><div class="num zero" id="n-taraf">0</div><div class="t">Taraf görüşü kaydı</div></div>
+            <div class="karne-item"><div class="num ok" id="n-tekzip">—</div><div class="t">Tekzip</div></div>
+          </div>
+          <p class="karne-note" id="esik-note">Yayın eşiği: en az <strong>2 kaynak/belge</strong> ve <strong>1 taraf görüşü kaydı</strong>. Eşik sağlanınca "Yayına gönder" açılır.</p>
+
+          <ul class="kayit-list" id="kayitlar" aria-live="polite"></ul>
+
+          <form class="ekle-form" id="ekle-form">
+            <div class="row">
+              <select id="tur" aria-label="Kayıt türü">
+                <option value="resmi">Resmî kayıt</option>
+                <option value="belge">Resmî belge</option>
+                <option value="bagimsiz">Bağımsız kaynak</option>
+                <option value="taraf">Taraf görüşü</option>
+              </select>
+              <input id="ad" type="text" placeholder="Örn: Sayıştay raporu, Bölüm 4.2" aria-label="Kayıt açıklaması">
+            </div>
+            <button class="btn" type="submit">+ Karneye kayıt ekle</button>
+          </form>
+        </div>
+      </section>
+
+      <!-- Hukuki risk -->
+      <section class="panel risk" aria-label="Hukuki risk analizi">
+        <header>
+          <h2>Hukuki Risk Analizi</h2>
+          <span class="hint">AI ön tarama · karar editörde</span>
+        </header>
+        <div class="pad">
+          <ul class="risk-list">
+            <li class="risk-item yuksek" id="risk1">
+              <span class="sev">Yüksek · tekzip riski</span>
+              <h3>Belgeyle desteklenmeyen kesinlik ifadesi</h3>
+              <p>Gövdedeki <q>Bu bilgi kesindir.</q> cümlesi, iki isimsiz kaynağa dayanan bir iddiayı kesin olgu gibi sunuyor. Öneri: <q>iddia ediyor; bu iddia yazılı belgeyle henüz desteklenmiyor</q> biçiminde verilmeli.</p>
+              <button class="coz" type="button">Düzeltildi olarak işaretle</button>
+            </li>
+            <li class="risk-item" id="risk2">
+              <span class="sev">Orta · eksik bilgi</span>
+              <h3>Yanıt süresi bağlamı eksik</h3>
+              <p>Kurumun <q>12 gündür yanıt vermediği</q> belirtiliyor; soruların hangi tarihte ve hangi kanaldan iletildiği metinde yer almalı (tekzip durumunda kanıt olur).</p>
+              <button class="coz" type="button">Düzeltildi olarak işaretle</button>
+            </li>
+            <li class="risk-item" id="risk3">
+              <span class="sev">Orta · kişilik hakları</span>
+              <h3>Şirket adları ve suçlama dengesi</h3>
+              <p>Şirketler henüz hakkında yargı kararı olmayan taraflardır; başlık ve spotta suç isnadı çağrışımı yapan ifade kullanılmamalı. Mevcut metin uygun; değişiklikte yeniden taranır.</p>
+              <button class="coz" type="button">Düzeltildi olarak işaretle</button>
+            </li>
+          </ul>
+          <p class="risk-note">Bu panel bir ön taramadır; hukuki sorumluluk değerlendirmesi editör ve hukuk danışmanına aittir. Uyarılar habere kaydedilir ve kurumsal hafızada saklanır.</p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</main>
+
+<footer class="note">
+  <div class="wrap">
+    <span>PROJECT FN. — Editör paneli tasarım prototipi. Tüm içerik temsilidir.</span>
+    <span>Karne = kayıtlardan türetilir · Yayın eşiği · AI öneri, editör karar</span>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    // ── Karne durumu: tek doğruluk kaynağı kayıt listesi ──
+    var kayitlar = [];
+    var listEl = document.getElementById('kayitlar');
+    var turAdlari = { resmi: 'Resmî kayıt', belge: 'Resmî belge', bagimsiz: 'Bağımsız kaynak', taraf: 'Taraf görüşü' };
+
+    function render() {
+      listEl.innerHTML = '';
+      kayitlar.forEach(function (k, i) {
+        var li = document.createElement('li');
+        var chip = document.createElement('span');
+        chip.className = 'tur-chip ' + k.tur;
+        chip.textContent = turAdlari[k.tur];
+        var ad = document.createElement('span');
+        ad.textContent = k.ad;
+        var sil = document.createElement('button');
+        sil.type = 'button'; sil.className = 'sil'; sil.textContent = '✕';
+        sil.setAttribute('aria-label', 'Kaydı sil: ' + k.ad);
+        sil.addEventListener('click', function () { kayitlar.splice(i, 1); render(); });
+        li.appendChild(chip); li.appendChild(ad); li.appendChild(sil);
+        listEl.appendChild(li);
+      });
+
+      var nKaynak = kayitlar.filter(function (k) { return k.tur === 'bagimsiz' || k.tur === 'resmi'; }).length;
+      var nBelge  = kayitlar.filter(function (k) { return k.tur === 'belge'; }).length;
+      var nTaraf  = kayitlar.filter(function (k) { return k.tur === 'taraf'; }).length;
+
+      setNum('n-kaynak', nKaynak);
+      setNum('n-belge', nBelge);
+      setNum('n-taraf', nTaraf);
+
+      var esikOk = (nKaynak + nBelge) >= 2 && nTaraf >= 1;
+      var yayinla = document.getElementById('yayinla');
+      var durum = document.getElementById('durum');
+      var note = document.getElementById('esik-note');
+      yayinla.disabled = !esikOk;
+      note.classList.toggle('ok', esikOk);
+      note.innerHTML = esikOk
+        ? '✓ Yayın eşiği sağlandı. Karne, haber sayfasında okura otomatik gösterilecek.'
+        : 'Yayın eşiği: en az <strong>2 kaynak/belge</strong> ve <strong>1 taraf görüşü kaydı</strong>. Eşik sağlanınca "Yayına gönder" açılır.';
+      if (durum.textContent !== 'Yayında') {
+        durum.textContent = esikOk ? 'Yayına hazır' : 'Taslak';
+        durum.className = 'status-pill ' + (esikOk ? 'hazir' : 'editorde');
+      }
+    }
+    function setNum(id, n) {
+      var el = document.getElementById(id);
+      el.textContent = n;
+      el.className = 'num ' + (n > 0 ? 'ok' : 'zero');
+    }
+
+    document.getElementById('ekle-form').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var ad = document.getElementById('ad').value.trim();
+      if (!ad) return;
+      kayitlar.push({ tur: document.getElementById('tur').value, ad: ad });
+      document.getElementById('ad').value = '';
+      render();
+    });
+
+    // ── Başlık önerileri ──
+    document.querySelectorAll('.oneri').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.getElementById('baslik').value = btn.textContent;
+      });
+    });
+
+    // ── Risk çözümleme ──
+    document.querySelectorAll('.risk-item .coz').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var item = btn.closest('.risk-item');
+        item.classList.add('cozuldu');
+        item.querySelector('.sev').textContent = 'Düzeltildi · editör onayıyla';
+      });
+    });
+
+    // ── Yayına gönder (temsilî) ──
+    document.getElementById('yayinla').addEventListener('click', function () {
+      var durum = document.getElementById('durum');
+      durum.textContent = 'Yayında';
+      durum.className = 'status-pill hazir';
+      this.textContent = '✓ Yayında — v1.0 arşivlendi';
+      this.disabled = true;
+    });
+    document.getElementById('kaydet').addEventListener('click', function () {
+      this.textContent = '✓ Kaydedildi';
+      var b = this;
+      setTimeout(function () { b.textContent = 'Taslağı kaydet'; }, 1500);
+    });
+
+    render();
+  })();
+</script>
+</body>
+</html>
