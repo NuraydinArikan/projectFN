@@ -162,17 +162,140 @@ const gundemAkisi: AkisKaydi[] = [
   { saat: "09:20", metin: "Hatay saha kaydı yayında" },
 ];
 
+function saatFormatla(iso: string | null): string {
+  if (!iso) return "—";
+  return new Date(iso).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" });
+}
+
+function ayFormatla(tarih: string): string {
+  return new Date(tarih).toLocaleDateString("tr-TR", { month: "long", year: "numeric" });
+}
+
+// haber_karne + ilişkili tablolardan Haber tipini kurar.
+// Karne rakamları burada elle hesaplanmaz — haber_karne görünümünden okunur (bkz. VERI-MODELI.md).
+async function haberSatirindanKur(row: {
+  id: string;
+  slug: string;
+  kicker: string | null;
+  baslik: string;
+  spot: string | null;
+  govde_ozet: string | null;
+  govde_detay: { tip: "p" | "h2"; kaynak: "resmi" | "bagimsiz" | "saha"; metin: string; belge_ref?: string }[] | null;
+  yayin_tarihi: string | null;
+  guncelleme_tarihi: string | null;
+  olay_id: string | null;
+  gazeteci: { ad: string } | { ad: string }[] | null;
+}): Promise<Haber> {
+  const supabase = getSupabase()!;
+  const gazeteciAdi = Array.isArray(row.gazeteci) ? row.gazeteci[0]?.ad : row.gazeteci?.ad;
+
+  const [{ data: kaynakSatirlari }, { data: belgeSatirlari }, { data: varlikSatirlari }, { data: surumSatirlari }, { data: dugumSatirlari }, { data: karneSatirlari }] =
+    await Promise.all([
+      supabase.from("haber_kaynak").select("dogrulama_durumu, not_metni, kaynak:kaynak_id(tur, ad)").eq("haber_id", row.id),
+      supabase.from("haber_belge").select("belge:belge_id(id, tur, baslik, sha256, icerik_ozeti)").eq("haber_id", row.id),
+      supabase.from("haber_varlik").select("rol, gorus_alindi, gorus_notu, varlik:varlik_id(ad)").eq("haber_id", row.id),
+      supabase.from("haber_surum").select("surum_no, not_metni, sha256, created_at").eq("haber_id", row.id).order("created_at"),
+      row.olay_id
+        ? supabase.from("olay_dugumu").select("tarih, baslik, ozet, sira").eq("olay_id", row.olay_id).order("sira")
+        : Promise.resolve({ data: [] as { tarih: string; baslik: string; ozet: string | null; sira: number }[] }),
+      supabase.from("haber_karne").select("*").eq("haber_id", row.id).single(),
+    ]);
+
+  const belgeler = (belgeSatirlari ?? []).map((b) => {
+    const belge = Array.isArray(b.belge) ? b.belge[0] : b.belge;
+    return {
+      id: belge!.id as string,
+      tur: belge!.tur === "kayit" ? "Resmî kayıt" : belge!.tur === "rapor" ? "Resmî belge" : (belge!.tur as string),
+      baslik: belge!.baslik as string,
+      hash: belge!.sha256 as string,
+      icerik: (belge!.icerik_ozeti as string) ?? "",
+    };
+  });
+
+  const enSonDugum = dugumSatirlari?.at(-1);
+
+  return {
+    slug: row.slug,
+    kicker: row.kicker ?? "",
+    baslik: row.baslik,
+    spot: row.spot ?? "",
+    ozet: row.govde_ozet ?? "",
+    muhabir: gazeteciAdi ?? "—",
+    yayin: saatFormatla(row.yayin_tarihi),
+    guncelleme: saatFormatla(row.guncelleme_tarihi),
+    tekzip: karneSatirlari?.tekzip ?? false,
+    bolumler: (row.govde_detay ?? []).map((b) => ({
+      tip: b.tip,
+      kaynak: b.kaynak,
+      metin: b.metin,
+      belgeRef: b.belge_ref,
+    })),
+    kaynaklar: (kaynakSatirlari ?? []).map((k) => {
+      const kaynak = Array.isArray(k.kaynak) ? k.kaynak[0] : k.kaynak;
+      return {
+        tur: kaynak!.tur === "bagimsiz_kisi" ? "bagimsiz" : "resmi",
+        ad: kaynak!.ad as string,
+        not: k.not_metni ?? undefined,
+        durum: k.dogrulama_durumu === "dogrulandi" ? "dogrulandi" : "bekliyor",
+      };
+    }),
+    belgeler,
+    taraflar: (varlikSatirlari ?? []).map((v) => {
+      const varlik = Array.isArray(v.varlik) ? v.varlik[0] : v.varlik;
+      return {
+        taraf: varlik!.ad as string,
+        durum: v.gorus_alindi ? "alindi" : "bekliyor",
+        not: v.gorus_notu ?? undefined,
+      };
+    }),
+    kronoloji: (dugumSatirlari ?? []).map((d) => ({
+      tarih: ayFormatla(d.tarih),
+      baslik: d.baslik,
+      ozet: d.ozet ?? "",
+      simdi: d === enSonDugum,
+    })),
+    surumler: (surumSatirlari ?? []).map((s) => ({
+      no: s.surum_no,
+      not: s.not_metni ?? "",
+      saat: saatFormatla(s.created_at),
+      hash: s.sha256,
+    })),
+  };
+}
+
+const HABER_SECIMI =
+  "id, slug, kicker, baslik, spot, govde_ozet, govde_detay, yayin_tarihi, guncelleme_tarihi, olay_id, gazeteci:yazar_id(ad)";
+
 export async function getMansetHaber(): Promise<Haber> {
-  // Supabase bağlıysa buradan sorgulanacak (Aşama 2); şimdilik tohum veri.
-  void getSupabase();
+  const supabase = getSupabase();
+  if (supabase) {
+    const { data } = await supabase
+      .from("haber")
+      .select(HABER_SECIMI)
+      .order("yayin_tarihi", { ascending: false })
+      .limit(1)
+      .single();
+    if (data) return haberSatirindanKur(data);
+  }
   return ihaleDosyasi;
 }
 
 export async function getHaber(slug: string): Promise<Haber | null> {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { data } = await supabase.from("haber").select(HABER_SECIMI).eq("slug", slug).single();
+    if (data) return haberSatirindanKur(data);
+    return null;
+  }
   return slug === ihaleDosyasi.slug ? ihaleDosyasi : null;
 }
 
 export async function getTumSluglar(): Promise<string[]> {
+  const supabase = getSupabase();
+  if (supabase) {
+    const { data } = await supabase.from("haber").select("slug");
+    if (data && data.length > 0) return data.map((h) => h.slug);
+  }
   return [ihaleDosyasi.slug];
 }
 

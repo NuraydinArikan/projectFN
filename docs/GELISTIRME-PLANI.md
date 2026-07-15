@@ -17,11 +17,15 @@
 
 ## Aşamalar
 
-1. **İskelet (bu PR):** Ana sayfa + haber detay sayfası gerçek bileşenler ve tipli veri katmanıyla; editör paneli `/editor` altında istemci tarafı çalışan taslak; Supabase şeması `supabase/migrations/0001_init.sql` içinde hazır.
-2. **Supabase bağlantısı:** Kurucu ekip bir Supabase projesi açar; `.env.local` dosyasına `NEXT_PUBLIC_SUPABASE_URL` ve `NEXT_PUBLIC_SUPABASE_ANON_KEY` girilir; migration uygulanır; `veri.ts` tohum veriden Supabase sorgularına geçirilir.
-3. **Vercel dağıtımı:** Repo Vercel'e bağlanır; her PR otomatik önizleme alır.
-4. **Editoryal iş akışı:** Auth (editör/muhabir rolleri), taslak→onay→yayın akışı, sürüm arşivi (hash).
+1. ✅ **İskelet:** Ana sayfa + haber detay sayfası gerçek bileşenler ve tipli veri katmanıyla; editör paneli `/editor` altında istemci tarafı çalışan taslak; Supabase şeması `supabase/migrations/0001_init.sql` içinde hazır.
+2. ✅ **Supabase bağlantısı:** `projectfn` Supabase projesi (eu-central-1) kuruldu; şema + RLS politikaları (`0001_init.sql`, `0002_rls_public_read.sql`) ve demo veri (`seed.sql`) uygulandı. `src/lib/veri.ts` artık Supabase bağlıysa gerçek sorgu yapar, bağlı değilse tohum veriye düşer — sayfa kodu değişmedi. Doğrulama karnesi `haber_karne` veritabanı görünümünden okunuyor; elle hesaplanmıyor.
+3. **Vercel dağıtımı:** Repo Vercel'e bağlandı (önizleme dağıtımı canlı); ortam değişkenleri (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) Vercel proje ayarlarına eklenmeli ki dağıtım da gerçek veriyi göstersin. Git entegrasyonu (her PR otomatik önizleme) henüz kurulmadı.
+4. **Editoryal iş akışı:** Auth (editör/muhabir rolleri), taslak→onay→yayın akışı, editör panelinin gerçek `haber_kaynak`/`haber_varlik` tablolarına yazması (şu an istemci tarafında temsilî).
 5. **AI servisleri:** Başlık önerisi, özet üretimi ve hukuki ön tarama için Claude API; tümü editör onayı arkasında.
+
+### Supabase erişim notu
+
+Proje `projectfn` adıyla "Nuraydin" organizasyonunda, `eu-central-1` bölgesinde açıldı (ref: `etbewemhrhqrauldskuf`). Ücretsiz plan hesap başına 2 aktif proje ile sınırlı olduğu için, bu projeyi açmak amacıyla kullanılmayan `algorithmless` projesi duraklatıldı (silinmedi — Supabase panelinden istendiğinde devam ettirilebilir).
 
 ## Yerelde çalıştırma
 
