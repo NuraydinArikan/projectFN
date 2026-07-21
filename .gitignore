@@ -6,4 +6,15 @@ out/
 .env.*.local
 *.tsbuildinfo
 next-env.d.ts
+
+# Yatırımcı materyali — depo public olduğu sürece dışarıda tutulur.
+# Depo private'a alınırsa bu satırlar kaldırılabilir.
+ProjectFN_Yatirimci_*.docx
+ProjectFN_Yatirimci_*.pptx
+
+# İşletim sistemi / editör artıkları
 .DS_Store
+desktop.ini
+Thumbs.db
+.idea/
+.vscode/

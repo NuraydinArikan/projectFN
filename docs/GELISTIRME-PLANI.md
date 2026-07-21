@@ -20,7 +20,11 @@
 1. ✅ **İskelet:** Ana sayfa + haber detay sayfası gerçek bileşenler ve tipli veri katmanıyla; editör paneli `/editor` altında istemci tarafı çalışan taslak; Supabase şeması `supabase/migrations/0001_init.sql` içinde hazır.
 2. ✅ **Supabase bağlantısı:** `projectfn` Supabase projesi (eu-central-1) kuruldu; şema + RLS politikaları (`0001_init.sql`, `0002_rls_public_read.sql`) ve demo veri (`seed.sql`) uygulandı. `src/lib/veri.ts` artık Supabase bağlıysa gerçek sorgu yapar, bağlı değilse tohum veriye düşer — sayfa kodu değişmedi. Doğrulama karnesi `haber_karne` veritabanı görünümünden okunuyor; elle hesaplanmıyor.
 3. **Vercel dağıtımı:** Repo Vercel'e bağlandı (önizleme dağıtımı canlı); ortam değişkenleri (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`) Vercel proje ayarlarına eklenmeli ki dağıtım da gerçek veriyi göstersin. Git entegrasyonu (her PR otomatik önizleme) henüz kurulmadı.
-4. **Editoryal iş akışı:** Auth (editör/muhabir rolleri), taslak→onay→yayın akışı, editör panelinin gerçek `haber_kaynak`/`haber_varlik` tablolarına yazması (şu an istemci tarafında temsilî).
+4. ✅ **Editoryal iş akışı (temel):** Supabase Auth (`/giris`), middleware ile `/editor` koruması, Server Action + service role ile `haber` / `haber_kaynak` / `haber_belge` / `haber_varlik` yazma, yayın eşiği sunucuda (`yayinEsigiSaglandi`). Migration: `0003_auth_write_path.sql`. Rol ayrımı ve onay kuyruğu sonraki ince ayar.
+4b. ✅ **Yetki ve gizlilik sıkılaştırması (`0004_yetki_ve_rls.sql`):** Erişim davet tabanlı hâle getirildi — oturum açan kullanıcı kendiliğinden editör olamaz, `gazeteci` satırı önceden e-postayla açılır ve `aktif` alanıyla yetkilendirilir. Yayına gönderme yalnız `editor` / `yayin_yonetmeni` rollerinde. RLS bağ tablolarına yayıldı: taslak haberlerin kaynakları, anonim kaynak notları, alınmamış taraf görüşleri ve yayımlanmamış belgeler artık anon anahtarla okunamıyor. `gazeteci.email` kolon yetkisiyle kapatıldı. `haber_karne` görünümü `security_invoker` ile RLS'e tabi kılındı (view'lar varsayılan olarak sahibinin haklarıyla çalışır ve politikayı baypas eder) ve `resmi_kaynak` sayımı eklendi.
+
+    **Kurulum notu:** Supabase → Authentication → Providers → Email → "Allow new users to sign up" kapatılmalıdır; ayrıntı için `.env.example`.
+
 5. **AI servisleri:** Başlık önerisi, özet üretimi ve hukuki ön tarama için Claude API; tümü editör onayı arkasında.
 
 ### Supabase erişim notu
