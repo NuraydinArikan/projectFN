@@ -22,7 +22,7 @@ npm run dev   # http://localhost:3000
 
 Sayfalar: `/` ana sayfa · `/haber/[slug]` haber detay · `/giris` editör girişi · `/editor` editör paneli (oturum zorunlu).
 
-Public site Supabase olmadan tohum veriyle çalışır. Editör yazma yolu için `.env.local` (`NEXT_PUBLIC_*` + `SUPABASE_SERVICE_ROLE_KEY`), migration `supabase/migrations/0003_auth_write_path.sql` ve Supabase Auth kullanıcısı gerekir — bkz. `.env.example` ve `docs/GELISTIRME-PLANI.md`.
+Public site Supabase olmadan tohum veriyle çalışır. Editör yazma yolu için `.env.local` (`NEXT_PUBLIC_*` + `SUPABASE_SERVICE_ROLE_KEY`), migration `supabase/migrations/0005_auth_write_path.sql` ve Supabase Auth kullanıcısı gerekir — bkz. `.env.example` ve `docs/GELISTIRME-PLANI.md`.
 
 ## Başlangıç noktaları
 

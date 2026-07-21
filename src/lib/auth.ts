@@ -49,7 +49,7 @@ function migrationEksik(message: string | undefined): boolean {
 function migrationHatasi(): AuthError {
   return new AuthError(
     503,
-    "Yetkilendirme şeması eksik. supabase/migrations/0004_yetki_ve_rls.sql dosyasını uygulayın."
+    "Yetkilendirme şeması eksik. supabase/migrations/0006_yetki_ve_rls.sql dosyasını uygulayın."
   );
 }
 

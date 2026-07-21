@@ -1,4 +1,4 @@
--- Project FN — 0004: Yetki sıkılaştırma ve RLS kapatma
+-- Project FN — 0006: Yetki sıkılaştırma ve RLS kapatma
 --
 -- 0002 içerik tablolarına "herkes okur" (using true) verdi; RLS filtresi yalnız
 -- `haber` tablosundaydı. Sonuç: anon anahtarla TASLAK haberlerin kaynakları,
@@ -163,3 +163,6 @@ select
     where td.haber_id = h.id and td.tur = 'tekzip') as tekzip,
   h.guncelleme_tarihi
 from haber h;
+
+-- Görünüm yeniden kurulduğu için yetkiler açıkça verilir.
+grant select on haber_karne to anon, authenticated;

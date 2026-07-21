@@ -1,4 +1,4 @@
--- Auth + editör yazma yolu (Aşama 4)
+-- Auth + editör yazma yolu (Aşama 4) — dosya adı 0005; veritabanındaki 0003/0004 sürümleri demo veriye aitti.
 -- Yazma hâlâ service role (sunucu) ile yapılır; bu migration
 -- gazeteci ↔ auth.users köprüsünü ve editörlerin taslak okumasını ekler.
 
