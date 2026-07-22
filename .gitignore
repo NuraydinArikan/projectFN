@@ -11,6 +11,7 @@ next-env.d.ts
 # Depo private'a alınırsa bu satırlar kaldırılabilir.
 ProjectFN_Yatirimci_*.docx
 ProjectFN_Yatirimci_*.pptx
+ProjectFN_Ortaklara_*.docx
 
 # İşletim sistemi / editör artıkları
 .DS_Store
