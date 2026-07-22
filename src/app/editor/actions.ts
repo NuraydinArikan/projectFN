@@ -56,9 +56,7 @@ export async function haberOlustur(girdi: {
 
     const slug = await benzersizSlug(admin, baslik);
     const govde = (girdi.govde ?? "").trim();
-    const govde_detay = govde
-      ? [{ tip: "p" as const, kaynak: "resmi" as const, metin: govde }]
-      : [];
+    const govde_detay = metniBloklara(govde, []);
 
     const { data, error } = await admin
       .from("haber")
@@ -67,7 +65,7 @@ export async function haberOlustur(girdi: {
         baslik,
         kicker: girdi.kicker?.trim() || "Dosya",
         spot: girdi.spot?.trim() || null,
-        govde_ozet: govde.slice(0, 500) || null,
+        govde_ozet: bloklardanOzet(govde_detay) || null,
         govde_detay,
         durum: "taslak",
         yazar_id: gazeteci.id,
@@ -102,30 +100,30 @@ export async function haberMetinKaydet(girdi: {
 
     const { data: mevcut } = await admin
       .from("haber")
-      .select("id, durum, slug")
+      .select("id, durum, slug, govde_detay")
       .eq("id", girdi.haberId)
       .maybeSingle();
 
     if (!mevcut) return { ok: false, hata: "Haber bulunamadı." };
-    if (mevcut.durum === "yayinda" || mevcut.durum === "guncellendi") {
-      // Metin güncellemesi yayında da serbest; durum guncellendi olur
-    }
 
-    const govde = girdi.govde.trim();
-    const govde_detay = govde
-      ? [{ tip: "p" as const, kaynak: "resmi" as const, metin: govde }]
-      : [];
+    const yayinda = mevcut.durum === "yayinda" || mevcut.durum === "guncellendi";
+
+    // Yeni metni bloklara çevir; değişmemiş paragrafların belge atıflarını taşı.
+    const oncekiBloklar = (Array.isArray(mevcut.govde_detay)
+      ? mevcut.govde_detay
+      : []) as GovdeBlok[];
+    const govde_detay = metniBloklara(girdi.govde.trim(), oncekiBloklar);
 
     const patch: Record<string, unknown> = {
       baslik,
       spot: girdi.spot.trim() || null,
       kicker: girdi.kicker?.trim() || null,
-      govde_ozet: govde.slice(0, 500) || null,
+      govde_ozet: bloklardanOzet(govde_detay) || null,
       govde_detay,
       guncelleme_tarihi: new Date().toISOString(),
     };
 
-    if (mevcut.durum === "yayinda" || mevcut.durum === "guncellendi") {
+    if (yayinda) {
       patch.durum = "guncellendi";
     } else if (mevcut.durum === "taslak") {
       patch.durum = "editorde";
@@ -133,6 +131,11 @@ export async function haberMetinKaydet(girdi: {
 
     const { error } = await admin.from("haber").update(patch).eq("id", girdi.haberId);
     if (error) return { ok: false, hata: error.message };
+
+    // Yayındaki bir haberin her güncellemesi sürüm arşivine işlenir.
+    if (yayinda) {
+      await surumYaz(admin, girdi.haberId, "Metin güncellendi");
+    }
 
     revalidatePath("/editor");
     revalidatePath(`/editor/${girdi.haberId}`);
@@ -360,26 +363,6 @@ export async function yayinaGonder(girdi: {
     }
 
     const now = new Date().toISOString();
-    const { data: surumler } = await admin
-      .from("haber_surum")
-      .select("surum_no")
-      .eq("haber_id", girdi.haberId)
-      .order("created_at", { ascending: false })
-      .limit(1);
-
-    const onceki = surumler?.[0]?.surum_no;
-    const surumNo = onceki ? sonrakiSurum(onceki) : "1.0";
-    const icerik = {
-      baslik: detay.baslik,
-      spot: detay.spot,
-      govde: detay.govde,
-      kayitlar: detay.kayitlar,
-    };
-    const sha256 = createHash("sha256")
-      .update(JSON.stringify(icerik))
-      .digest("hex")
-      .slice(0, 16);
-
     const { error: uErr } = await admin
       .from("haber")
       .update({
@@ -391,18 +374,8 @@ export async function yayinaGonder(girdi: {
 
     if (uErr) return { ok: false, hata: uErr.message };
 
-    const { error: sErr } = await admin.from("haber_surum").insert({
-      haber_id: girdi.haberId,
-      surum_no: surumNo,
-      not_metni: "İlk yayın (editör paneli)",
-      icerik,
-      sha256,
-    });
-
-    if (sErr) {
-      // durum güncellendi; sürüm hatasını bildir ama yayın durmasın
-      console.error("haber_surum insert:", sErr.message);
-    }
+    // İlk yayın da sürüm arşivine yazılır (sürüm hatası yayını durdurmaz).
+    await surumYaz(admin, girdi.haberId, "İlk yayın (editör paneli)");
 
     revalidatePath("/");
     revalidatePath(`/haber/${detay.slug}`);
@@ -438,4 +411,103 @@ function sonrakiSurum(onceki: string): string {
   const m = onceki.match(/^(\d+)\.(\d+)/);
   if (!m) return "1.0";
   return `${m[1]}.${Number(m[2]) + 1}`;
+}
+
+/** Gövde bloğu (govde_detay öğesi). */
+type GovdeBlok = {
+  tip: "p" | "h2";
+  kaynak: "resmi" | "bagimsiz" | "saha";
+  metin: string;
+  belge_ref?: string;
+};
+
+/**
+ * Editör metnini yapısal bloklara çevirir. Hafif işaretleme sözleşmesi:
+ *   - Bloklar boş satırla ayrılır.
+ *   - "## " ile başlayan blok ara başlıktır (h2).
+ *   - "[bagimsiz] " / "[saha] " / "[resmi] " öneki bloğun kaynak etiketini belirler
+ *     (önek yoksa "resmi").
+ * Belge referansları (inline atıf) metinde gösterilmez; önceki bloklardan
+ * metni değişmemiş olanların belge_ref değeri taşınır — yani bir paragrafı
+ * yeniden yazmadıkça atfı korunur.
+ */
+function metniBloklara(metin: string, oncekiBloklar: GovdeBlok[]): GovdeBlok[] {
+  const refHaritasi = new Map<string, string>();
+  for (const b of oncekiBloklar) {
+    if (b.belge_ref && b.metin) refHaritasi.set(b.metin, b.belge_ref);
+  }
+
+  return metin
+    .split(/\n\s*\n/)
+    .map((parca) => parca.trim())
+    .filter(Boolean)
+    .map((parca) => {
+      let s = parca;
+      let tip: "p" | "h2" = "p";
+      if (s.startsWith("## ")) {
+        tip = "h2";
+        s = s.slice(3).trim();
+      }
+      let kaynak: GovdeBlok["kaynak"] = "resmi";
+      const m = s.match(/^\[(resmi|bagimsiz|saha)\]\s*/);
+      if (m) {
+        kaynak = m[1] as GovdeBlok["kaynak"];
+        s = s.slice(m[0].length);
+      }
+      const blok: GovdeBlok = { tip, kaynak, metin: s };
+      const ref = refHaritasi.get(s);
+      if (ref) blok.belge_ref = ref;
+      return blok;
+    });
+}
+
+/** Bloklardan düz özet (govde_ozet) üretir. */
+function bloklardanOzet(bloklar: GovdeBlok[]): string {
+  return bloklar
+    .filter((b) => b.tip === "p")
+    .map((b) => b.metin)
+    .join(" ")
+    .slice(0, 500);
+}
+
+/**
+ * Haberin o anki tam kopyasını hash'iyle birlikte sürüm arşivine yazar.
+ * "Her yayın değişikliğinin tam kopyası arşivlenir" ilkesinin karşılığı.
+ * Yalnız yayındaki haberler için çağrılır (taslak public değildir).
+ */
+async function surumYaz(
+  admin: NonNullable<ReturnType<typeof createAdminSupabase>>,
+  haberId: string,
+  notMetni: string
+) {
+  const detay = await getEditorHaber(haberId);
+  if (!detay) return;
+
+  const { data: son } = await admin
+    .from("haber_surum")
+    .select("surum_no")
+    .eq("haber_id", haberId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  const surumNo = son?.[0]?.surum_no ? sonrakiSurum(son[0].surum_no) : "1.0";
+  const icerik = {
+    baslik: detay.baslik,
+    spot: detay.spot,
+    govde: detay.govde,
+    kayitlar: detay.kayitlar,
+  };
+  // Tam 64 karakter: erişim engeli senaryosunda değişmezlik kanıtı olabilmesi için.
+  const sha256 = createHash("sha256")
+    .update(JSON.stringify(icerik))
+    .digest("hex");
+
+  const { error } = await admin.from("haber_surum").insert({
+    haber_id: haberId,
+    surum_no: surumNo,
+    not_metni: notMetni,
+    icerik,
+    sha256,
+  });
+  if (error) console.error("haber_surum insert:", error.message);
 }

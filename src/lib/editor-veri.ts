@@ -105,15 +105,26 @@ export async function getEditorHaber(
   };
 }
 
+/**
+ * govde_detay bloklarını editör metnine seriler. actions.ts'teki
+ * metniBloklara() ile tam ters işlem — gidiş-dönüş kayıpsız olmalı:
+ *   - h2 blok → "## metin"
+ *   - kaynak resmî değilse "[kaynak] " öneki eklenir
+ * (belge_ref metinde gösterilmez; kaydederken metni değişmemiş paragraflara
+ *  actions.ts tarafından geri eşleştirilir.)
+ */
 function govdeMetnine(
   detay: unknown,
   ozet: string | null
 ): string {
   if (Array.isArray(detay) && detay.length > 0) {
     return detay
-      .map((b: { tip?: string; metin?: string }) => {
-        if (b.tip === "h2") return b.metin ?? "";
-        return b.metin ?? "";
+      .map((b: { tip?: string; kaynak?: string; metin?: string }) => {
+        const metin = b.metin ?? "";
+        if (!metin) return "";
+        const onek =
+          b.kaynak && b.kaynak !== "resmi" ? `[${b.kaynak}] ` : "";
+        return b.tip === "h2" ? `## ${onek}${metin}` : `${onek}${metin}`;
       })
       .filter(Boolean)
       .join("\n\n");

@@ -293,6 +293,12 @@ export function EditorPaneli({
                   value={govde}
                   onChange={(e) => setGovde(e.target.value)}
                 />
+                <p className="footnote">
+                  Biçim: paragrafları boş satırla ayırın · <code>## </code>{" "}
+                  ile başlayan satır ara başlık olur ·{" "}
+                  <code>[bagimsiz]</code> / <code>[saha]</code> öneki paragrafın
+                  kaynak etiketini belirler (öneksiz = resmî).
+                </p>
               </div>
               {yayinda && (
                 <p className="footnote">

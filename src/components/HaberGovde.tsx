@@ -5,6 +5,11 @@ import type { Belge, Haber } from "@/lib/types";
 
 type Mod = "tam" | "ozet" | "dinle";
 
+/** Tam sha256 (64 hane) gösterimde kısaltılır; kısa/temsilî hash'ler olduğu gibi kalır. */
+function kisaHash(h: string): string {
+  return h && h.length > 20 ? `${h.slice(0, 8)}…${h.slice(-4)}` : h;
+}
+
 export function HaberGovde({ haber }: { haber: Haber }) {
   const [mod, setMod] = useState<Mod>("tam");
   const [resmiFiltre, setResmiFiltre] = useState(false);
@@ -162,7 +167,7 @@ export function HaberGovde({ haber }: { haber: Haber }) {
                     <span>
                       {s.not} · {s.saat}
                     </span>
-                    <span className="h">{s.hash}</span>
+                    <span className="h">{kisaHash(s.hash)}</span>
                   </li>
                 ))}
               </ul>
@@ -187,7 +192,7 @@ export function HaberGovde({ haber }: { haber: Haber }) {
               <div className="doc-card" key={b.id}>
                 <span className="tur">{b.tur}</span>
                 <h3>{b.baslik}</h3>
-                <span className="hash">SHA-256: {b.hash}</span>
+                <span className="hash">SHA-256: {kisaHash(b.hash)}</span>
                 <button type="button" onClick={() => setAcikBelge(b)}>
                   Belgeyi görüntüle
                 </button>
@@ -216,7 +221,7 @@ export function HaberGovde({ haber }: { haber: Haber }) {
             </header>
             <div className="viewer-doc">{acikBelge.icerik}</div>
             <p className="viewer-meta">
-              Değişmezlik kaydı: <code>SHA-256: {acikBelge.hash}</code> · Bu
+              Değişmezlik kaydı: <code>SHA-256: {kisaHash(acikBelge.hash)}</code> · Bu
               görüntü temsilîdir; gerçek üründe belgenin aslı ve OCR metni
               birlikte sunulur.
             </p>
