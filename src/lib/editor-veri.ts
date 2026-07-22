@@ -63,6 +63,7 @@ export async function getEditorHaber(
       id: k.kaynak_id as string,
       tur: tur as EditorKayit["tur"],
       ad: kaynak.ad as string,
+      durum: k.dogrulama_durumu === "dogrulandi" ? "dogrulandi" : "bekliyor",
       not: k.not_metni ?? undefined,
     });
   }

@@ -7,6 +7,9 @@ export interface EditorKayit {
   id: string;
   tur: KayitTuru;
   ad: string;
+  /** Yalnız kaynak (bagimsiz/resmi) için: doğrulama durumu.
+   *  belge her zaman sayılır, taraf gorusAlindi kullanır. */
+  durum?: "dogrulandi" | "bekliyor";
   /** taraf için görüş alındı mı */
   gorusAlindi?: boolean;
   not?: string;

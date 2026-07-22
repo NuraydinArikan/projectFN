@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   haberMetinKaydet,
   kayitEkle,
+  kaynakDurumDegistir,
   kayitSil,
   yayinaGonder,
 } from "./actions";
@@ -114,7 +115,34 @@ export function EditorPaneli({
       }
       setKayitlar((prev) => [...prev, r.data]);
       setYeniAd("");
-      setMesaj("Kayıt eklendi (veritabanı).");
+      const kaynakTuru = yeniTur === "bagimsiz" || yeniTur === "resmi";
+      setMesaj(
+        kaynakTuru
+          ? "Kaynak eklendi — teyit bekliyor. Editör doğrulayınca karneye sayılır."
+          : "Kayıt eklendi (veritabanı)."
+      );
+      router.refresh();
+    });
+  }
+
+  function kaynakDogrulaClick(k: EditorKayit) {
+    const dogrula = k.durum !== "dogrulandi";
+    calistir(async () => {
+      const r = await kaynakDurumDegistir({
+        haberId: haber.id,
+        kaynakId: k.id,
+        dogrula,
+      });
+      if (!r.ok) {
+        setHata(r.hata);
+        return;
+      }
+      setKayitlar((prev) =>
+        prev.map((x) =>
+          x.id === k.id && x.tur === k.tur ? { ...x, durum: r.data.durum } : x
+        )
+      );
+      setMesaj(dogrula ? "Kaynak doğrulandı." : "Doğrulama geri alındı.");
       router.refresh();
     });
   }
@@ -330,23 +358,42 @@ export function EditorPaneli({
                 </p>
 
                 <ul className="kayit-list" aria-live="polite">
-                  {kayitlar.map((k) => (
-                    <li key={`${k.tur}-${k.id}`}>
-                      <span className={`tur-chip ${k.tur}`}>
-                        {turAdlari[k.tur]}
-                      </span>
-                      <span>{k.ad}</span>
-                      <button
-                        type="button"
-                        className="sil"
-                        disabled={pending}
-                        aria-label={`Kaydı sil: ${k.ad}`}
-                        onClick={() => kayitSilClick(k)}
-                      >
-                        ✕
-                      </button>
-                    </li>
-                  ))}
+                  {kayitlar.map((k) => {
+                    const kaynakTuru = k.tur === "bagimsiz" || k.tur === "resmi";
+                    const dogrulandi = k.durum === "dogrulandi";
+                    return (
+                      <li key={`${k.tur}-${k.id}`}>
+                        <span className={`tur-chip ${k.tur}`}>
+                          {turAdlari[k.tur]}
+                        </span>
+                        <span className="kayit-ad">{k.ad}</span>
+                        {kaynakTuru && (
+                          <button
+                            type="button"
+                            className={`dogrula-btn ${dogrulandi ? "ok" : "bekliyor"}`}
+                            disabled={pending}
+                            title={
+                              dogrulandi
+                                ? "Doğrulamayı geri al"
+                                : "Kaynağı doğrulanmış olarak işaretle"
+                            }
+                            onClick={() => kaynakDogrulaClick(k)}
+                          >
+                            {dogrulandi ? "✓ Doğrulandı" : "Teyit bekliyor"}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className="sil"
+                          disabled={pending}
+                          aria-label={`Kaydı sil: ${k.ad}`}
+                          onClick={() => kayitSilClick(k)}
+                        >
+                          ✕
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
 
                 <form className="ekle-form" onSubmit={kayitEkleForm}>

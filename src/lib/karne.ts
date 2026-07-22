@@ -17,6 +17,8 @@ export interface Karne {
 export interface KarneKayitGirdi {
   tur: "resmi" | "belge" | "bagimsiz" | "taraf";
   ad: string;
+  /** Kaynak (bagimsiz/resmi) doğrulama durumu; yoksa "bekliyor" varsayılır. */
+  durum?: "dogrulandi" | "bekliyor";
   gorusAlindi?: boolean;
   not?: string;
   id?: string;
@@ -59,7 +61,11 @@ export function editorKayitlarindanKarne(
       .map((k) => ({
         tur: k.tur as "bagimsiz" | "resmi",
         ad: k.ad,
-        durum: "dogrulandi" as const,
+        // Karne yalnız doğrulanmış kaynağı sayar. Yeni kaynak "bekliyor" başlar;
+        // editör doğrulayana kadar eşiğe katkı vermez.
+        durum: (k.durum === "dogrulandi" ? "dogrulandi" : "bekliyor") as
+          | "dogrulandi"
+          | "bekliyor",
       })),
     belgeler: kayitlar
       .filter((k) => k.tur === "belge")

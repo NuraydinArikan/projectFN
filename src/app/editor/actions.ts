@@ -173,10 +173,12 @@ export async function kayitEkle(girdi: {
         .single();
       if (kErr || !kaynak) return { ok: false, hata: kErr?.message || "Kaynak eklenemedi." };
 
+      // Yeni kaynak "teyit bekliyor" başlar — editör doğrulayana kadar karneye
+      // sayılmaz. Bu, "karne editoryal disiplinin çıktısıdır" ilkesinin gereği.
       const { error: hkErr } = await admin.from("haber_kaynak").insert({
         haber_id: girdi.haberId,
         kaynak_id: kaynak.id,
-        dogrulama_durumu: "dogrulandi",
+        dogrulama_durumu: "teyit_bekliyor",
         not_metni: girdi.not ?? null,
       });
       if (hkErr) return { ok: false, hata: hkErr.message };
@@ -185,7 +187,7 @@ export async function kayitEkle(girdi: {
       revalidateEditor(girdi.haberId);
       return {
         ok: true,
-        data: { id: kaynak.id, tur: girdi.tur, ad, not: girdi.not },
+        data: { id: kaynak.id, tur: girdi.tur, ad, durum: "bekliyor", not: girdi.not },
       };
     }
 
@@ -293,6 +295,41 @@ export async function kayitSil(girdi: {
     await dokunHaber(admin, girdi.haberId);
     revalidateEditor(girdi.haberId);
     return { ok: true, data: undefined };
+  } catch (e) {
+    return hataSonuc(e);
+  }
+}
+
+/**
+ * Bir kaynağın doğrulama durumunu değiştirir (teyit_bekliyor ↔ dogrulandi).
+ * Yalnız editör / yayın yönetmeni doğrulayabilir: kaynağı ekleyen muhabir
+ * değil, ondan bağımsız biri onaylamalı — editoryal kontrol buradadır.
+ */
+export async function kaynakDurumDegistir(girdi: {
+  haberId: string;
+  kaynakId: string;
+  dogrula: boolean;
+}): Promise<ActionSonuc<{ durum: "dogrulandi" | "bekliyor" }>> {
+  try {
+    await requireGazeteci(YAYIN_ROLLERI);
+    const admin = adminZorunlu();
+
+    const yeni = girdi.dogrula ? "dogrulandi" : "teyit_bekliyor";
+    const { data, error } = await admin
+      .from("haber_kaynak")
+      .update({ dogrulama_durumu: yeni })
+      .eq("haber_id", girdi.haberId)
+      .eq("kaynak_id", girdi.kaynakId)
+      .select("kaynak_id");
+
+    if (error) return { ok: false, hata: error.message };
+    if (!data || data.length === 0) {
+      return { ok: false, hata: "Kaynak bu habere ait değil.", kod: 404 };
+    }
+
+    await dokunHaber(admin, girdi.haberId);
+    revalidateEditor(girdi.haberId);
+    return { ok: true, data: { durum: girdi.dogrula ? "dogrulandi" : "bekliyor" } };
   } catch (e) {
     return hataSonuc(e);
   }
